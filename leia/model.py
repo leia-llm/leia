@@ -16,7 +16,6 @@ class LeiaLlamaConfig(LlamaConfig):
         temperature: float = 1.0,
         layer_index: int = 31,
         use_entity_decoder_activation: bool = False,
-        use_entity_prediction: bool = True,
         use_entity_prev_token_prediction: bool = True,
         use_entity_last_token_prediction: bool = True,
         **kwargs,
@@ -28,7 +27,6 @@ class LeiaLlamaConfig(LlamaConfig):
         self.temperature = temperature
         self.layer_index = layer_index
         self.use_entity_decoder_activation = use_entity_decoder_activation
-        self.use_entity_prediction = use_entity_prediction
         self.use_entity_prev_token_prediction = use_entity_prev_token_prediction
         self.use_entity_last_token_prediction = use_entity_last_token_prediction
 
@@ -120,7 +118,7 @@ class LeiaLlamaForCausalLM(LlamaForCausalLM):
             attentions=result.attentions,
             lm_loss=result.loss.detach().clone() if result.loss is not None else None,
         )
-        if self.config.use_entity_prediction and self.training:
+        if self.training:
             for prefix, head, token_positions in [
                 ("entity_prev_token", self.prev_token_head, entity_prev_token_positions),
                 ("entity_last_token", self.last_token_head, entity_last_token_positions),

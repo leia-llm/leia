@@ -39,7 +39,6 @@ class LeiaTrainingArguments(TrainingArguments):
     use_entity_decoder_activation: bool = field(default=False)
     num_preprocess_workers: int = field(default=multiprocessing.cpu_count())
     use_flash_attention_2: bool = field(default=False)
-    use_entity_prediction: bool = field(default=True)
     use_entity_prev_token_prediction: bool = field(default=True)
     use_entity_last_token_prediction: bool = field(default=True)
     use_dynamic_generation_length: bool = field(default=True)
@@ -147,7 +146,6 @@ def main():
         temperature=args.temperature,
         layer_index=args.layer_index,
         use_entity_decoder_activation=args.use_entity_decoder_activation,
-        use_entity_prediction=args.use_entity_prediction,
         use_entity_prev_token_prediction=args.use_entity_prev_token_prediction,
         use_entity_last_token_prediction=args.use_entity_last_token_prediction,
         use_cache=not args.gradient_checkpointing,
