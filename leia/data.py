@@ -89,23 +89,38 @@ class LeiaConstantLengthDataset(IterableDataset):
         self._dataset_size = dataset_size
 
     def __iter__(self) -> Iterator[dict[str, torch.Tensor]]:
+        worker_info = torch.utils.data.get_worker_info()
+        assert (
+            worker_info is None or worker_info.num_workers == 1
+        ), "LeiaConstantLengthDataset does not support multiprocessing"
+
+        buffer = []
+        buffer_length = 0
         epoch_counter = 0
-        instance_counter = 0
+        example_counter = 0
         token_counter = 0
+        current_example = None
 
         while True:
-            buffer = []
-            buffer_length = 0
             dataset = self._dataset
             if self._shuffle:
                 dataset = dataset.shuffle(self._seed + epoch_counter)
+            dataset_iter = iter(dataset)
 
-            for n, example in enumerate(iter(dataset)):
-                buffer_length += len(example["input_ids"])
-                buffer.append(example)
-                if n != 0 and n % 10000 == 0 and self._dataset_size is not None:
+            while True:
+                if current_example is None:
+                    try:
+                        current_example = next(dataset_iter)
+                        example_counter += 1
+                    except StopIteration:
+                        break
+
+                buffer_length += len(current_example["input_ids"])
+                buffer.append(current_example)
+                current_example = None
+                if example_counter != 1 and example_counter % 10000 == 0 and self._dataset_size is not None:
                     logger.info(
-                        f"epoch: {epoch_counter} #instance: {instance_counter} #token: {token_counter} progress: {(n/self._dataset_size * 100):.2f}%"
+                        f"epoch: {epoch_counter} #token: {token_counter} progress: {(example_counter/self._dataset_size * 100):.2f}%"
                     )
 
                 if buffer_length >= self._max_length:
@@ -141,10 +156,32 @@ class LeiaConstantLengthDataset(IterableDataset):
                             entity_last_token_positions[: self._max_entity_length]
                         ),
                     }
+                    token_counter += self._max_length
+
+                    # The remaining part of the example is processed in the next batch
+                    remaining_input_ids = input_ids[self._max_length :]
+                    if remaining_input_ids:
+                        current_example = {
+                            "input_ids": remaining_input_ids,
+                            "entity_ids": [],
+                            "entity_prev_token_positions": [],
+                            "entity_last_token_positions": [],
+                        }
+                        offset = len(buffer[-1]["input_ids"]) - len(remaining_input_ids)
+                        for entity_id, prev_token_position, last_token_position in zip(
+                            example["entity_ids"],
+                            example["entity_prev_token_positions"],
+                            example["entity_last_token_positions"],
+                        ):
+                            if prev_token_position >= offset:
+                                prev_token_position -= offset
+                                last_token_position -= offset
+                                current_example["entity_ids"].append(entity_id)
+                                current_example["entity_prev_token_positions"].append(prev_token_position)
+                                current_example["entity_last_token_positions"].append(last_token_position)
+
                     buffer = []
                     buffer_length = 0
-                    instance_counter += 1
-                    token_counter += self._max_length
 
             if not self._infinite:
                 break
