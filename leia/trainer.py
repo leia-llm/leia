@@ -108,29 +108,30 @@ class LeiaTrainer(Trainer):
         if eval_dataset is not None:
             metrics = super().evaluate(eval_dataset, ignore_keys, metric_key_prefix)
 
-        # https://github.com/huggingface/transformers/blob/v4.34.1/src/transformers/trainer.py#L1357
-        model = self._wrap_model(self.model, training=False)
-        model.eval()
+        if self._eval_tasks:
+            # https://github.com/huggingface/transformers/blob/v4.34.1/src/transformers/trainer.py#L1357
+            model = self._wrap_model(self.model, training=False)
+            model.eval()
 
-        for task_name in self._eval_tasks:
-            task_class = get_task(task_name)
-            task_kwargs = self._eval_task_kwargs
-            if isinstance(task_class, LoglikelihoodTask):
-                task_kwargs.update(self._eval_log_likelihood_task_kwargs)
-            elif isinstance(task_class, GenerationTask):
-                task_kwargs.update(self._eval_generation_task_kwargs)
+            for task_name in self._eval_tasks:
+                task_class = get_task(task_name)
+                task_kwargs = self._eval_task_kwargs
+                if isinstance(task_class, LoglikelihoodTask):
+                    task_kwargs.update(self._eval_log_likelihood_task_kwargs)
+                elif isinstance(task_class, GenerationTask):
+                    task_kwargs.update(self._eval_generation_task_kwargs)
 
-            task_result = task_class(
-                model=model,
-                accelerator=self.accelerator,
-                tokenizer=self.tokenizer,
-                batch_size=self.args.per_device_eval_batch_size,
-                seed=self.args.seed,
-                **task_kwargs,
-            ).run()
-            for metric_name, metric_value in task_result.metrics.items():
-                metric_key_name = f"{metric_key_prefix}_{task_name}_{metric_name}"
-                metrics[metric_key_name] = metric_value
-                self.log({metric_key_name: metric_value})
+                task_result = task_class(
+                    model=model,
+                    accelerator=self.accelerator,
+                    tokenizer=self.tokenizer,
+                    batch_size=self.args.per_device_eval_batch_size,
+                    seed=self.args.seed,
+                    **task_kwargs,
+                ).run()
+                for metric_name, metric_value in task_result.metrics.items():
+                    metric_key_name = f"{metric_key_prefix}_{task_name}_{metric_name}"
+                    metrics[metric_key_name] = metric_value
+                    self.log({metric_key_name: metric_value})
 
         return metrics
