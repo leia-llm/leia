@@ -9,9 +9,14 @@ fi
 
 for LANG in ${TARGET_LANG}
 do
+    if [ ${LANG} = "zh" ]; then
+        ARGS="--no-templates"
+        echo "Using --no-templates"
+    fi
     wikiextractor \
         ${TARGET_DIR}/${LANG}wiki-${DATE}-pages-articles-multistream.xml.bz2 \
         -o ${TARGET_DIR}/${LANG} \
         --html-safe "" \
-        --links
+        --links \
+        ${ARGS}
 done
