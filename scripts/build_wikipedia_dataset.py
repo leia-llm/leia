@@ -17,12 +17,17 @@ def _encode_examples(
     text_list: list[str],
     anchors_list: list[dict],
     tokenizer: PreTrainedTokenizerBase,
-    max_length: int,
+    max_length: int | None,
     min_prev_token_position: int,
 ) -> dict[str, list[list[int | str]]]:
     encoded_texts = tokenizer(
-        text_list, max_length=max_length, truncation=True, return_offsets_mapping=True, return_special_tokens_mask=True
+        text_list,
+        max_length=max_length,
+        truncation=max_length is not None,
+        return_offsets_mapping=True,
+        return_special_tokens_mask=True,
     )
+
     ret = {
         "input_ids": encoded_texts["input_ids"],
         "wikidata_ids": [],
@@ -201,7 +206,7 @@ if __name__ == "__main__":
     parser.add_argument("--preprocessed_dataset_dir", type=str, required=True)
     parser.add_argument("--wikidata_id_file", type=str, required=True)
     parser.add_argument("--output_dir", type=str, required=True)
-    parser.add_argument("--max_length", type=int, required=True)
+    parser.add_argument("--max_length", type=int)
     parser.add_argument("--entity_vocab_file", type=str)
     parser.add_argument("--entity_vocab_size", type=int)
     parser.add_argument("--num_workers", type=int, default=multiprocessing.cpu_count())
