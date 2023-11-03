@@ -28,6 +28,10 @@ class LeiaTrainer(Trainer):
         if eval_task_kwargs is not None:
             self._eval_task_kwargs = eval_task_kwargs
 
+        self._eval_log_likelihood_task_kwargs = {}
+        if eval_log_likelihood_task_kwargs is not None:
+            self._eval_log_likelihood_task_kwargs = eval_log_likelihood_task_kwargs
+
         self._eval_generation_task_kwargs = {}
         if eval_generation_task_kwargs is not None:
             self._eval_generation_task_kwargs = eval_generation_task_kwargs
@@ -111,10 +115,10 @@ class LeiaTrainer(Trainer):
         for task_name in self._eval_tasks:
             task_class = get_task(task_name)
             task_kwargs = self._eval_task_kwargs
-            if isinstance(task_class, GenerationTask):
-                task_kwargs.update(self._eval_generation_task_kwargs)
-            elif isinstance(task_class, LoglikelihoodTask):
+            if isinstance(task_class, LoglikelihoodTask):
                 task_kwargs.update(self._eval_log_likelihood_task_kwargs)
+            elif isinstance(task_class, GenerationTask):
+                task_kwargs.update(self._eval_generation_task_kwargs)
 
             task_result = task_class(
                 model=model,
