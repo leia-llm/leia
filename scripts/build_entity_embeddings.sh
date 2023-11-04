@@ -1,12 +1,12 @@
 #!/bin/bash
 
 accelerate launch \
-  --mixed_precision fp16 \
-  ${ACCELERATE_ARGS} \
-  scripts/build_entity_embeddings.py \
-  --wikipedia_dataset_dir ${WIKIPEDIA_DATASET_DIR} \
-  --model_name ${MODEL_NAME} \
-  --output_dir ${OUTPUT_DIR} \
-  --batch_size ${BATCH_SIZE} \
-  --layers ${LAYERS} \
-  ${ARGS}
+    --mixed_precision fp16 \
+    --use_flash_attention_2 \
+    scripts/build_entity_embeddings.py \
+    --wikipedfia_dataset_dir "${WIKIPEDIA_DATA_DIR}/en_${DIR_NAME_SUFFIX}" \
+    --model_name ${MODEL_NAME} \
+    --output_dir "${ENTITY_EMBEDDING_DIR}/en_${DIR_NAME_SUFFIX}" \
+    --batch_size ${BATCH_SIZE:-"1"} \
+    --layers ${LAYERS:-"16,24,28,31,32"} \
+    ${ARGS}
