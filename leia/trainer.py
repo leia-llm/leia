@@ -105,7 +105,7 @@ class LeiaTrainer(Trainer):
         metric_key_prefix: str = "eval",
     ) -> dict[str, float]:
         metrics = {}
-        if eval_dataset is not None:
+        if eval_dataset is not None or self.eval_dataset is not None:
             metrics = super().evaluate(eval_dataset, ignore_keys, metric_key_prefix)
 
         if self._eval_tasks:
