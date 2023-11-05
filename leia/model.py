@@ -118,7 +118,7 @@ class LeiaLlamaForCausalLM(LlamaForCausalLM):
             attentions=result.attentions,
             lm_loss=result.loss.detach().clone() if result.loss is not None else None,
         )
-        if self.training:
+        if entity_ids is not None:
             for prefix, head, token_positions in [
                 ("entity_prev_token", self.prev_token_head, entity_prev_token_positions),
                 ("entity_last_token", self.last_token_head, entity_last_token_positions),
