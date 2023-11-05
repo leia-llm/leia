@@ -1,5 +1,7 @@
 #!/bin/bash
 
+DIR_NAME_SUFFIX=$(echo ${MODEL_NAME} | cut -d "/" -f 2)
+
 accelerate launch \
     --mixed_precision fp16 \
     --use_flash_attention_2 \

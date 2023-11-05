@@ -1,5 +1,7 @@
 #!/bin/bash
 
+DIR_NAME_SUFFIX=$(echo ${MODEL_NAME} | cut -d "/" -f 2)
+
 python scripts/build_wikipedia_dataset.py \
     --model_name ${MODEL_NAME} \
     --preprocessed_dataset_dir "${WIKIPEDIA_DATA_DIR}/en_preprocessed" \
