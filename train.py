@@ -71,10 +71,8 @@ def main():
     train_dataset = train_dataset.shuffle(seed=args.seed)
     eval_dataset = None
     if args.num_eval_wikipedia_samples is not None:
-        dataset_dict = train_dataset.train_test_split(test_size=args.num_eval_wikipedia_samples, shuffle=False)
-        train_dataset = dataset_dict["train"]
-        eval_dataset = dataset_dict["test"]
-        del dataset_dict
+        eval_dataset = train_dataset.select(range(args.num_eval_wikipedia_samples))
+        train_dataset = train_dataset.select(range(args.num_eval_wikipedia_samples, len(train_dataset)))
 
     if args.skip_wikipedia_samples is not None:
         train_dataset = train_dataset.select(range(args.skip_wikipedia_samples, len(train_dataset)))

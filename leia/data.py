@@ -186,4 +186,9 @@ class LeiaConstantLengthDataset(IterableDataset):
             if not self._infinite:
                 break
 
+            if self._dataset_size is not None:
+                logger.info(
+                    f"finished epoch {epoch_counter} #token: {token_counter} progress: {(example_counter/self._dataset_size * 100):.2f}%"
+                )
+
             epoch_counter += 1
