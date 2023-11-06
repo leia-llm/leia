@@ -12,10 +12,12 @@ python scripts/build_wikipedia_dataset.py \
 
 for LANG in ${TARGET_LANGUAGES}
 do
-    python scripts/build_wikipedia_dataset.py \
-        --model_name ${MODEL_NAME} \
-        --preprocessed_dataset_dir "${WIKIPEDIA_DATA_DIR}/${LANG}_preprocessed" \
-        --wikidata_id_file "${WIKIDATA_DATA_DIR}/${LANG}-wikidata-ids.tsv" \
-        --output_dir "${WIKIPEDIA_DATA_DIR}/${LANG}_${DIR_NAME_SUFFIX}" \
-        --entity_vocab_file "${WIKIPEDIA_DATA_DIR}/en_${DIR_NAME_SUFFIX}/entity_vocab.tsv"
+    if [ "${LANG}" != "en" ]; then
+        python scripts/build_wikipedia_dataset.py \
+            --model_name ${MODEL_NAME} \
+            --preprocessed_dataset_dir "${WIKIPEDIA_DATA_DIR}/${LANG}_preprocessed" \
+            --wikidata_id_file "${WIKIDATA_DATA_DIR}/${LANG}-wikidata-ids.tsv" \
+            --output_dir "${WIKIPEDIA_DATA_DIR}/${LANG}_${DIR_NAME_SUFFIX}" \
+            --entity_vocab_file "${WIKIPEDIA_DATA_DIR}/en_${DIR_NAME_SUFFIX}/entity_vocab.tsv"
+    fi
 done
