@@ -108,10 +108,6 @@ class BaseTask:
         for n, example in enumerate(task_dataset):
             context = self._create_context(example, train_dataset=train_dataset, task_dataset=task_dataset, rnd=rnd)
             requests = self._create_requests(example, context)
-            if n < 10:
-                print(context)
-                print(requests)
-                print("---")
             all_requests.append(requests)
 
         all_results = self._compute_results(list(itertools.chain(*all_requests)))
