@@ -180,7 +180,7 @@ def main():
     model.prev_token_head.decoder.decoder.weight.data.copy_(prev_token_embeddings)
     model.last_token_head.decoder.decoder.weight.data.copy_(last_token_embeddings)
     if args.load_entity_dense_weights:
-        entity_dense_weights_file = os.path.join(args.output_dir, "entity_dense_weights.pt"))
+        entity_dense_weights_file = os.path.join(args.output_dir, "entity_dense_weights.pt")
         if not os.path.exists(entity_dense_weights_file):
             raise RuntimeError("entity_dense_weights.pt does not exist")
         entity_dense_weights = torch.load(entity_dense_weights_file, map_location="cpu")
