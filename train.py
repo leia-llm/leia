@@ -47,6 +47,7 @@ class LeiaTrainingArguments(TrainingArguments):
     num_train_wikipedia_samples: int | None = field(default=None)
     num_eval_wikipedia_samples: int | None = field(default=None)
     skip_wikipedia_samples: int | None = field(default=None)
+    load_entity_dense_weights: bool = field(default=False)
 
 
 def main():
@@ -178,8 +179,16 @@ def main():
 
     model.prev_token_head.decoder.decoder.weight.data.copy_(prev_token_embeddings)
     model.last_token_head.decoder.decoder.weight.data.copy_(last_token_embeddings)
-    model.prev_token_head.dense.weight.data.copy_(torch.eye(config.hidden_size))
-    model.last_token_head.dense.weight.data.copy_(torch.eye(config.hidden_size))
+    if args.load_entity_dense_weights:
+        entity_dense_weights_file = os.path.join(args.output_dir, "entity_dense_weights.pt"))
+        if not os.path.exists(entity_dense_weights_file):
+            raise RuntimeError("entity_dense_weights.pt does not exist")
+        entity_dense_weights = torch.load(entity_dense_weights_file, map_location="cpu")
+        model.prev_token_head.dense.weight.data.copy_(entity_dense_weights["prev_token_head.dense.weight"])
+        model.last_token_head.dense.weight.data.copy_(entity_dense_weights["last_token_head.dense.weight"])
+    else:
+        model.prev_token_head.dense.weight.data.copy_(torch.eye(config.hidden_size))
+        model.last_token_head.dense.weight.data.copy_(torch.eye(config.hidden_size))
 
     if args.train_entity_dense_only:
         for param in model.parameters():
@@ -230,8 +239,18 @@ def main():
     else:
         trainer.train()
 
-    trainer.save_state()
-    trainer.save_model()
+    if args.train_entity_dense_only:
+        if args.local_rank == 0:
+            torch.save(
+                {
+                    "prev_token_head.dense.weight": model.prev_token_head.dense.weight.data,
+                    "last_token_head.dense.weight": model.last_token_head.dense.weight.data,
+                },
+                os.path.join(args.output_dir, "entity_dense_weights.pt"),
+            )
+    else:
+        trainer.save_state()
+        trainer.save_model()
 
 
 if __name__ == "__main__":
