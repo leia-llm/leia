@@ -77,7 +77,7 @@ class BaseTask:
         max_length: int,
         max_generation_length: int = 256,
         seed: int = 42,
-        num_fewshot_samples: int = 3,
+        num_fewshot_samples: int | None = None,
         max_samples: int | None = None,
         aggregation_function: Callable = np.mean,
     ):
@@ -88,13 +88,18 @@ class BaseTask:
         self._max_length = max_length
         self._max_generation_length = max_generation_length
         self._seed = seed
-        self._num_fewshot_samples = num_fewshot_samples
         self._max_samples = max_samples
         self._aggregation_function = aggregation_function
 
+        self._num_fewshot_samples = 0
+        if num_fewshot_samples is not None:
+            self._num_fewshot_samples = num_fewshot_samples
+
     def run(self) -> TaskResult | None:
         with self._accelerator.main_process_first():
-            train_dataset = list(self._get_train_dataset())
+            train_dataset = self._get_train_dataset()
+            if train_dataset is not None:
+                train_dataset = list(train_dataset)
             task_dataset = list(self._get_task_dataset())
 
         rnd = random.Random(self._seed)
@@ -103,9 +108,13 @@ class BaseTask:
             task_dataset = task_dataset[: self._max_samples]
 
         all_requests = []
-        for example in task_dataset:
-            context = self._create_context(example, train_dataset=train_dataset, rnd=rnd)
+        for n, example in enumerate(task_dataset):
+            context = self._create_context(example, train_dataset=train_dataset, task_dataset=task_dataset, rnd=rnd)
             requests = self._create_requests(example, context)
+            if n < 10:
+                print(context)
+                print(requests)
+                print("---")
             all_requests.append(requests)
 
         all_results = self._compute_results(list(itertools.chain(*all_requests)))
@@ -128,7 +137,7 @@ class BaseTask:
         return task_result
 
     @abstractmethod
-    def _get_train_dataset(self) -> Dataset:
+    def _get_train_dataset(self) -> Dataset | None:
         pass
 
     @abstractmethod
@@ -155,11 +164,18 @@ class BaseTask:
     def _process_results(self, example: dict, results: list[float | str]) -> dict:
         pass
 
-    def _create_context(self, example: dict, train_dataset: list[dict], rnd: random.Random) -> str:
+    def _create_context(
+        self, example: dict, train_dataset: list[dict] | None, task_dataset: list[dict], rnd: random.Random
+    ) -> str:
         context = self.DESCRIPTION
 
         if self._num_fewshot_samples != 0:
-            fewshot_examples = rnd.sample(train_dataset, self._num_fewshot_samples)
+            if train_dataset is not None:
+                fewshot_examples = rnd.sample(train_dataset, self._num_fewshot_samples)
+            else:
+                fewshot_examples = rnd.sample(task_dataset, self._num_fewshot_samples + 1)
+                fewshot_examples = [x for x in fewshot_examples if x != example][: self._num_fewshot_samples]
+
             context += "\n\n".join([self._example_to_text(fe) + self._example_to_target(fe) for fe in fewshot_examples])
             context += "\n\n"
 
