@@ -105,7 +105,7 @@ class BaseTask:
             task_dataset = task_dataset[: self._max_samples]
 
         all_requests = []
-        for n, example in enumerate(task_dataset):
+        for example in task_dataset:
             context = self._create_context(example, train_dataset=train_dataset, task_dataset=task_dataset, rnd=rnd)
             requests = self._create_requests(example, context)
             all_requests.append(requests)

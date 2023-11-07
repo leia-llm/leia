@@ -240,11 +240,13 @@ def main():
         trainer.train()
 
     if args.train_entity_dense_only:
-        if args.local_rank == 0:
+        state_dict = trainer.accelerator.get_state_dict(trainer.model_wrapped)
+        if args.process_index == 0:
             torch.save(
                 {
-                    "prev_token_head.dense.weight": model.prev_token_head.dense.weight.data,
-                    "last_token_head.dense.weight": model.last_token_head.dense.weight.data,
+                    key: value
+                    for key, value in state_dict.items()
+                    if key in ("prev_token_head.dense.weight", "last_token_head.dense.weight")
                 },
                 os.path.join(args.output_dir, "entity_dense_weights.pt"),
             )
