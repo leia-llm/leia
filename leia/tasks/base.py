@@ -77,7 +77,7 @@ class BaseTask:
         max_length: int,
         max_generation_length: int = 256,
         seed: int = 42,
-        num_fewshot_samples: int | None = None,
+        num_fewshot_samples: int = 0,
         max_samples: int | None = None,
         aggregation_function: Callable = np.mean,
     ):
@@ -88,12 +88,9 @@ class BaseTask:
         self._max_length = max_length
         self._max_generation_length = max_generation_length
         self._seed = seed
+        self._num_fewshot_samples = num_fewshot_samples
         self._max_samples = max_samples
         self._aggregation_function = aggregation_function
-
-        self._num_fewshot_samples = 0
-        if num_fewshot_samples is not None:
-            self._num_fewshot_samples = num_fewshot_samples
 
     def run(self) -> TaskResult | None:
         with self._accelerator.main_process_first():

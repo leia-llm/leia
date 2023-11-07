@@ -40,6 +40,7 @@ class LeiaTrainingArguments(TrainingArguments):
 
     eval_tasks: str | None = field(default=None)
     max_eval_samples_for_tasks: int | None = field(default=None)
+    num_fewshot_samples_for_tasks: int = field(default=0)
     use_dynamic_generation_length: bool = field(default=True)
 
     train_entity_dense_only: bool = field(default=False)
@@ -217,6 +218,7 @@ def main():
         eval_task_kwargs={
             "max_length": args.max_length,
             "max_samples": args.max_eval_samples_for_tasks,
+            "num_fewshot_samples": args.num_fewshot_samples_for_tasks,
         },
         eval_generation_task_kwargs={
             "use_dynamic_generation_length": args.use_dynamic_generation_length,
