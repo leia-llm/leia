@@ -90,10 +90,8 @@ class LeiaLlamaForCausalLM(LlamaForCausalLM):
 
     def __init__(self, config: LeiaLlamaConfig):
         super().__init__(config)
-        if config.use_entity_prev_token_prediction:
-            self.prev_token_head = LeiaEntityPredictionHead(config)
-        if config.use_entity_last_token_prediction:
-            self.last_token_head = LeiaEntityPredictionHead(config)
+        self.prev_token_head = LeiaEntityPredictionHead(config)
+        self.last_token_head = LeiaEntityPredictionHead(config)
 
     def forward(
         self,
