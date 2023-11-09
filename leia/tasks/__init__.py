@@ -1,4 +1,6 @@
 from .base import BaseTask, GenerationTask, LoglikelihoodTask
+from .belebele import get_task_mapping as belebele_get_task_mapping
+from .exams import get_task_mapping as exams_get_task_mapping
 from .jcommonsenseqa import JCommonsenseQA
 from .jnli import JNLI
 from .jsquad import JSQuAD
@@ -20,6 +22,8 @@ _TASKS: dict[str, type[BaseTask]] = {
     "xorqa_en": XORQAEn,
     "xorqa_ja": XORQAJa,
 }
+_TASKS.update(belebele_get_task_mapping())
+_TASKS.update(exams_get_task_mapping())
 _TASKS.update(pawsx_get_task_mapping())
 _TASKS.update(xcopa_get_task_mapping())
 _TASKS.update(xnli_get_task_mapping())
