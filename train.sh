@@ -50,6 +50,9 @@ fi
 if [[ ! -z ${EVAL_TASKS} ]]; then
     ARGS="${ARGS} --eval_tasks ${EVAL_TASKS}"
 fi
+if [[ ! -z ${NUM_FEWSHOT_SAMPLES_FOR_TASKS} ]]; then
+    ARGS="${ARGS} --num_fewshot_samples_for_tasks ${NUM_FEWSHOT_SAMPLES_FOR_TASKS}"
+fi
 if [[ ! -z ${NUM_TRAIN_WIKIPEDIA_SAMPLES} ]]; then
     ARGS="${ARGS} --num_train_wikipedia_samples ${NUM_TRAIN_WIKIPEDIA_SAMPLES}"
 fi
