@@ -17,7 +17,10 @@ DEFAULT_NUM_FEW_SHOT_SAMPLES = 3
 
 def evaluate(args: argparse.Namespace):
     model = AutoModelForCausalLM.from_pretrained(
-        args.model_name_or_path, trust_remote_code=True, torch_dtype=torch.float16
+        args.model_name_or_path,
+        trust_remote_code=True,
+        torch_dtype=torch.float16,
+        use_flash_attention_2=args.use_flash_attention_2,
     )
     max_length = model.config.max_position_embeddings if args.max_length is None else args.max_length
 
@@ -76,12 +79,13 @@ def evaluate(args: argparse.Namespace):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--model_name_or_path", type=str, required=True)
-    parser.add_argument("--output_dir", type=str)
-    parser.add_argument("--task", type=str)
+    parser.add_argument("--task", type=str, required=True)
     parser.add_argument("--num_fewshot_samples", type=str)
+    parser.add_argument("--output_dir", type=str)
     parser.add_argument("--batch_size", type=int, default=1)
     parser.add_argument("--max_length", type=int, default=None)
     parser.add_argument("--max_samples", type=int, default=None)
+    parser.add_argument("--use_flash_attention_2", action="store_true")
     args = parser.parse_args()
 
     metrics = evaluate(args)
