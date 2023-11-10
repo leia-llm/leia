@@ -34,10 +34,10 @@ class XCODAHBase(LoglikelihoodTask):
 def _create_task_class(language: str) -> type[XCODAHBase]:
     class _XCODAH(XCODAHBase):
         def _get_train_dataset(self) -> None:
-            return load_dataset("xcsr", f"X-CODAH-{language}", split="validation")
+            return None
 
         def _get_task_dataset(self) -> Dataset:
-            return load_dataset("xcsr", f"X-CODAH-{language}", split="test")
+            return load_dataset("xcsr", f"X-CODAH-{language}", split="validation")
 
     return _XCODAH
 

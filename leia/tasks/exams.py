@@ -34,7 +34,7 @@ class ExamsBase(LoglikelihoodTask):
 
 def _create_task_class(language: str) -> type[ExamsBase]:
     class _Exams(ExamsBase):
-        def _get_train_dataset(self) -> None:
+        def _get_train_dataset(self) -> Dataset:
             return load_dataset("exams", f"crosslingual_{language}", split="train")
 
         def _get_task_dataset(self) -> Dataset:

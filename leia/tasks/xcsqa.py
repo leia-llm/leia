@@ -35,10 +35,10 @@ class XCSQABase(LoglikelihoodTask):
 def _create_task_class(language: str) -> type[XCSQABase]:
     class _XCSQA(XCSQABase):
         def _get_train_dataset(self) -> None:
-            return load_dataset("xcsr", f"X-CSQA-{language}", split="validation")
+            return None
 
         def _get_task_dataset(self) -> Dataset:
-            return load_dataset("xcsr", f"X-CSQA-{language}", split="test")
+            return load_dataset("xcsr", f"X-CSQA-{language}", split="validation")
 
     return _XCSQA
 
