@@ -6,7 +6,7 @@ from .base import LogLikelihoodRequest, LoglikelihoodTask
 
 class ExamsBase(LoglikelihoodTask):
     def _example_to_text(self, example: dict) -> str:
-        return f"Question:{example['question']['stem']}\nAnswer:"
+        return f"Question: {example['question']['stem']}\nAnswer:"
 
     def _example_to_target(self, example: dict) -> str:
         return " " + example["question"]["choices"]["text"][self._get_answer_index(example)]
