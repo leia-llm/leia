@@ -7,7 +7,9 @@ from .jsquad import JSQuAD
 from .marc_ja import MARCJa
 from .miaqa import MKQAEn, MKQAJa, XORQAEn, XORQAJa
 from .pawsx import get_task_mapping as pawsx_get_task_mapping
+from .xcodah import get_task_mapping as xcodah_get_task_mapping
 from .xcopa import get_task_mapping as xcopa_get_task_mapping
+from .xcsqa import get_task_mapping as xcsqa_get_task_mapping
 from .xnli import get_task_mapping as xnli_get_task_mapping
 from .xstorycloze import get_task_mapping as xstorycloze_get_task_mapping
 from .xwinograd import get_task_mapping as xwinograd_get_task_mapping
@@ -25,7 +27,9 @@ _TASKS: dict[str, type[BaseTask]] = {
 _TASKS.update(belebele_get_task_mapping())
 _TASKS.update(exams_get_task_mapping())
 _TASKS.update(pawsx_get_task_mapping())
+_TASKS.update(xcodah_get_task_mapping())
 _TASKS.update(xcopa_get_task_mapping())
+_TASKS.update(xcsqa_get_task_mapping())
 _TASKS.update(xnli_get_task_mapping())
 _TASKS.update(xstorycloze_get_task_mapping())
 _TASKS.update(xwinograd_get_task_mapping())
