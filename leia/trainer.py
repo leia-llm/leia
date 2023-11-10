@@ -13,6 +13,7 @@ class LeiaTrainer(Trainer):
         self,
         *args,
         eval_tasks: list[str] | None = None,
+        num_fewshot_samples_for_tasks: list[int] | None = None,
         eval_task_kwargs: dict[str, Any] | None = None,
         eval_log_likelihood_task_kwargs: dict[str, Any] | None = None,
         eval_generation_task_kwargs: dict[str, Any] | None = None,
@@ -23,6 +24,14 @@ class LeiaTrainer(Trainer):
         self._eval_tasks = []
         if eval_tasks is not None:
             self._eval_tasks = eval_tasks
+
+        if num_fewshot_samples_for_tasks is None:
+            self._num_fewshot_samples_for_tasks = [0] * len(self._eval_tasks)
+        else:
+            self._num_fewshot_samples_for_tasks = num_fewshot_samples_for_tasks
+            assert len(num_fewshot_samples_for_tasks) == len(
+                self._eval_tasks
+            ), "The number of few-shot samples must match the number of tasks"
 
         self._eval_task_kwargs = {}
         if eval_task_kwargs is not None:
@@ -113,7 +122,7 @@ class LeiaTrainer(Trainer):
             model = self._wrap_model(self.model, training=False)
             model.eval()
 
-            for task_name in self._eval_tasks:
+            for task_name, num_fewshot_samples in zip(self._eval_tasks, self._num_fewshot_samples_for_tasks):
                 task_class = get_task(task_name)
                 task_kwargs = self._eval_task_kwargs
                 if isinstance(task_class, LoglikelihoodTask):
@@ -127,6 +136,7 @@ class LeiaTrainer(Trainer):
                     tokenizer=self.tokenizer,
                     batch_size=self.args.per_device_eval_batch_size,
                     seed=self.args.seed,
+                    num_fewshot_samples=num_fewshot_samples,
                     **task_kwargs,
                 ).run()
                 for metric_name, metric_value in task_result.metrics.items():
