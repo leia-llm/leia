@@ -34,7 +34,7 @@ def _create_task_class(language: str) -> type[BelebeleBase]:
             return None
 
         def _get_task_dataset(self) -> Dataset:
-            return load_dataset("facebook/belebele", language, split="test")
+            return load_dataset("facebook/belebele", language, split="train")
 
     return _Belebele
 
@@ -42,8 +42,13 @@ def _create_task_class(language: str) -> type[BelebeleBase]:
 def get_task_mapping() -> dict[str, type[BelebeleBase]]:
     tasks = {}
     for lang, flores_lang in [
+        ("ar", "arb_Arab"),
         ("en", "eng_Latn"),
+        ("de", "deu_Latn"),
+        ("es", "spa_Latn"),
+        ("fr", "fra_Latn"),
         ("ja", "jpn_Jpan"),
+        ("ru", "rus_Cyrl"),
         ("sw", "swh_Latn"),
         ("tr", "tur_Latn"),
         ("vi", "vie_Latn"),
