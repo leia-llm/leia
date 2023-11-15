@@ -31,9 +31,9 @@ if [[ -z ${MAX_STEPS} ]]; then
     MAX_TRAIN_TOKENS=${MAX_TRAIN_TOKENS:-"204800000"}
     MAX_STEPS=$((${MAX_TRAIN_TOKENS} / ${BATCH_SIZE} / ${MAX_LENGTH}))
 fi
-WARMUP_STEPS=${WARMUP_STEPS:-$((${MAX_STEPS} / 10))}
-EVAL_STEPS=${EVAL_STEPS:-$((${MAX_STEPS} / 10))}
-SAVE_STEPS=${SAVE_STEPS:-$((${MAX_STEPS} / 10))}
+WARMUP_STEPS=${WARMUP_STEPS:-$((${MAX_STEPS} / 5))}
+EVAL_STEPS=${EVAL_STEPS:-$((${MAX_STEPS} / 5))}
+SAVE_STEPS=${SAVE_STEPS:-$((${MAX_STEPS} / 5))}
 
 DIR_NAME_SUFFIX=$(echo ${MODEL_NAME_OR_PATH} | cut -d "/" -f 2)
 
@@ -99,7 +99,7 @@ accelerate launch \
     --gradient_accumulation_steps ${GRADIENT_ACCUMULATION_STEPS} \
     --gradient_checkpointing ${GRADIENT_CHECKPOINTING:-"true"} \
     --learning_rate ${LEARNING_RATE:-"3e-5"} \
-    --lr_scheduler_type ${LR_SCHEDULER_TYPE:-"linear"} \
+    --lr_scheduler_type ${LR_SCHEDULER_TYPE:-"cosine"} \
     --max_steps ${MAX_STEPS} \
     --warmup_steps ${WARMUP_STEPS} \
     --weight_decay ${WEIGHT_DECAY:-"0.1"} \
@@ -113,7 +113,7 @@ accelerate launch \
     --max_entity_length ${MAX_ENTITY_LENGTH:-"128"} \
     --entity_vocab_size ${ENTITY_VOCAB_SIZE:-"300000"} \
     \
-    --layer_index ${LAYER_INDEX:-"31"} \
+    --layer_index ${LAYER_INDEX:-"32"} \
     --similarity_function ${SIMILARITY_FUNCTION:-"cosine"} \
     --temperature ${TEMPERATURE:-"0.01"} \
     --use_entity_prev_token_prediction ${USE_ENTITY_PREV_TOKEN_PREDICTION:-"true"} \
