@@ -6,7 +6,7 @@ import datasets
 import torch
 import transformers
 from datasets import interleave_datasets, load_dataset, load_from_disk
-from transformers import AutoTokenizer, HfArgumentParser, TrainingArguments, set_seed
+from transformers import AutoTokenizer, HfArgumentParser, TrainerCallback, TrainingArguments, set_seed
 
 from leia.data import LeiaConstantLengthDataset, LeiaDataCollator
 from leia.model import LeiaLlamaConfig, LeiaLlamaForCausalLM
@@ -48,6 +48,12 @@ class LeiaTrainingArguments(TrainingArguments):
     num_eval_wikipedia_samples: int | None = field(default=None)
     skip_wikipedia_samples: int | None = field(default=None)
     load_entity_dense_weights: bool = field(default=False)
+
+
+class EvaluateFirstStepCallback(TrainerCallback):
+    def on_step_begin(self, args, state, control, **kwargs):
+        if state.global_step == 0:
+            control.should_evaluate = True
 
 
 def main():
@@ -237,6 +243,7 @@ def main():
             "use_dynamic_generation_length": args.use_dynamic_generation_length,
         },
     )
+    trainer.add_callback(EvaluateFirstStepCallback())
 
     if args.resume_from_checkpoint is not None:
         trainer.train(resume_from_checkpoint=args.resume_from_checkpoint)
