@@ -48,6 +48,7 @@ def get_task_mapping() -> dict[str, type[BelebeleBase]]:
         ("es", "spa_Latn"),
         ("fr", "fra_Latn"),
         ("ja", "jpn_Jpan"),
+        ("pt", "por_Latn"),
         ("ru", "rus_Cyrl"),
         ("sw", "swh_Latn"),
         ("tr", "tur_Latn"),
