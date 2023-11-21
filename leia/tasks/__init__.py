@@ -1,6 +1,8 @@
 from .base import BaseTask, GenerationTask, LoglikelihoodTask
 from .belebele import get_task_mapping as belebele_get_task_mapping
+from .cmmlu import get_task_mapping as cmmlu_get_task_mapping
 from .exams import get_task_mapping as exams_get_task_mapping
+from .jaqket import Jaqket
 from .jcommonsenseqa import JCommonsenseQA
 from .jnli import JNLI
 from .jsquad import JSQuAD
@@ -15,6 +17,7 @@ from .xstorycloze import get_task_mapping as xstorycloze_get_task_mapping
 from .xwinograd import get_task_mapping as xwinograd_get_task_mapping
 
 _TASKS: dict[str, type[BaseTask]] = {
+    "jaqket": Jaqket,
     "jcommonsenseqa": JCommonsenseQA,
     "jnli": JNLI,
     "jsquad": JSQuAD,
@@ -25,6 +28,7 @@ _TASKS: dict[str, type[BaseTask]] = {
     "xorqa_ja": XORQAJa,
 }
 _TASKS.update(belebele_get_task_mapping())
+_TASKS.update(cmmlu_get_task_mapping())
 _TASKS.update(exams_get_task_mapping())
 _TASKS.update(pawsx_get_task_mapping())
 _TASKS.update(xcodah_get_task_mapping())
