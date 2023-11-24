@@ -27,7 +27,7 @@ if [[ -z ${MAX_STEPS} ]]; then
     MAX_TRAIN_TOKENS=${MAX_TRAIN_TOKENS:-"204800000"}
     MAX_STEPS=$((${MAX_TRAIN_TOKENS} / ${BATCH_SIZE} / ${MAX_LENGTH}))
 fi
-WARMUP_STEPS=${WARMUP_STEPS:-$((${MAX_STEPS} / 5))}
+WARMUP_STEPS=${WARMUP_STEPS:-$((${MAX_STEPS} / 10))}
 EVAL_STEPS=${EVAL_STEPS:-$((${MAX_STEPS} / 5))}
 SAVE_STEPS=${SAVE_STEPS:-$((${MAX_STEPS} / 5))}
 
@@ -74,7 +74,7 @@ accelerate launch \
     --output_dir ${OUTPUT_DIR:-"runs/${RUN_NAME}"} \
     \
     --model_name_or_path ${MODEL_NAME_OR_PATH} \
-    --wikipedia_dataset_dir "${WIKIPEDIA_DATA_DIR}/${LANGUAGE}_${DIR_NAME_SUFFIX}" \
+    --wikipedia_dataset_dir "${WIKIPEDIA_DATA_DIR}/${LANGUAGE}_dataset_${DIR_NAME_SUFFIX}" \
     \
     --text_dataset_path ${TEXT_DATASET_PATH:-""} \
     --text_dataset_name ${TEXT_DATASET_NAME:-""} \
