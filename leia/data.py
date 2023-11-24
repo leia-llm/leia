@@ -99,10 +99,6 @@ class LeiaConstantLengthDataset(IterableDataset):
                         break
 
                     dataset_example_counter += 1
-                    if dataset_example_counter != 1 and dataset_example_counter % 10000 == 0:
-                        logger.info(
-                            f"epoch: {epoch_counter} #token: {token_counter} progress: {(dataset_example_counter / self._dataset_size* 100):.2f}%"
-                        )
 
                     if self._trans_insertion_prob_decay:
                         trans_insertion_prob = self._trans_insertion_prob * min(
@@ -110,16 +106,16 @@ class LeiaConstantLengthDataset(IterableDataset):
                         )
                     input_ids += self._build_input_ids_from_example(example, trans_insertion_prob)
 
+                    if dataset_example_counter != 1 and dataset_example_counter % 10000 == 0:
+                        logger.info(
+                            f"epoch: {epoch_counter} #token: {token_counter} progress: {(dataset_example_counter / self._dataset_size* 100):.2f}% insertion_prob: {trans_insertion_prob}"
+                        )
+
                 if len(input_ids) >= self._max_length:
                     yield {"input_ids": torch.tensor(input_ids[: self._max_length])}
                     token_counter += self._max_length
                     output_example_counter += 1
-                    if output_example_counter == self._max_num_examples:
-                        break
                     input_ids = input_ids[self._max_length :]
-
-            if output_example_counter == self._max_num_examples:
-                break
 
             if self._dataset_size is not None:
                 logger.info(

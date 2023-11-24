@@ -124,6 +124,7 @@ def main():
     )
     train_cl_dataset = LeiaConstantLengthDataset(
         train_dataset,
+        dataset_size=train_dataset_size,
         max_length=args.max_length,
         max_num_examples=max_num_examples,
         trans_start_token_id=tokenizer.vocab["<trans>"],
@@ -131,10 +132,8 @@ def main():
         trans_insertion_prob=args.trans_insertion_prob,
         trans_insertion_prob_decay=args.trans_insertion_prob_decay,
         trans_insertion_strategy=args.trans_insertion_strategy,
-        infinite=True,
         shuffle=True,
         seed=args.seed,
-        dataset_size=train_dataset_size,
     )
 
     data_collator = LeiaDataCollator(tokenizer=tokenizer, max_length=args.max_length)
