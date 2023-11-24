@@ -43,15 +43,19 @@ def get_task_mapping() -> dict[str, type[BelebeleBase]]:
     tasks = {}
     for lang, flores_lang in [
         ("ar", "arb_Arab"),
-        ("en", "eng_Latn"),
         ("de", "deu_Latn"),
+        ("en", "eng_Latn"),
         ("es", "spa_Latn"),
         ("fr", "fra_Latn"),
+        ("hi", "hin_Deva"),
+        ("it", "ita_Latn"),
         ("ja", "jpn_Jpan"),
+        ("pl", "pol_Latn"),
         ("pt", "por_Latn"),
         ("ru", "rus_Cyrl"),
         ("sw", "swh_Latn"),
         ("tr", "tur_Latn"),
+        ("ur", "urd_Arab"),
         ("vi", "vie_Latn"),
         ("zh", "zho_Hans"),
     ]:

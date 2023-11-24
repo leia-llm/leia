@@ -3,7 +3,7 @@ import string
 from abc import ABCMeta, abstractmethod
 from collections import Counter
 
-from datasets import Dataset, Features, Sequence, Value, load_dataset
+from datasets import Dataset, load_dataset
 from fugashi import Tagger
 
 from .base import GenerationRequest, GenerationTask
@@ -49,28 +49,10 @@ def f1_score(prediction: str, ground_truth: str):
 
 
 class MIAQABase(GenerationTask, metaclass=ABCMeta):
-    LANGUAGE: str = "en"
+    LANGUAGE = ""
 
-    def _get_train_dataset(self) -> Dataset:
-        path = os.path.join(os.path.dirname(__file__), "data", "mia_2022_train_data.jsonl")
-        features = Features(
-            {
-                "id": Value(dtype="string"),
-                "question": Value(dtype="string"),
-                "lang": Value(dtype="string"),
-                "answers": Sequence(feature=Value(dtype="string")),
-                "split": Value(dtype="string"),
-                "source": Value(dtype="string"),
-                "has_eng_answer_only": Value(dtype="bool"),
-            }
-        )
-        dataset = load_dataset("json", data_files=path, features=features, split="train")
-        dataset = dataset.filter(
-            lambda example: example["lang"] == self.LANGUAGE
-            and not example["has_eng_answer_only"]
-            and example["answers"][0].lower() not in ("no answer", "yes", "no")
-        )
-        return dataset
+    def _get_train_dataset(self) -> None:
+        return None
 
     @abstractmethod
     def _get_task_dataset(self) -> Dataset:
@@ -79,7 +61,7 @@ class MIAQABase(GenerationTask, metaclass=ABCMeta):
     def _example_to_text(self, example: dict) -> str:
         # Based on the prompt in the following code:
         # https://github.com/EleutherAI/lm-evaluation-harness/blob/93cbffa59180e74b5516927adef11b9eeb76bf28/lm_eval/tasks/nqopen.py#L62
-        return f"Q: {example['question']}\nA:"
+        return f"Question: {example['question']}\nAnswer:"
 
     def _example_to_target(self, example: dict) -> str:
         answer = example["answers"][0]
@@ -112,36 +94,41 @@ class MIAQABase(GenerationTask, metaclass=ABCMeta):
         return ret
 
 
-class XORQA(MIAQABase):
-    def _get_task_dataset(self) -> Dataset:
-        path = os.path.join(os.path.dirname(__file__), "data", "mia_2022_dev_xorqa.jsonl")
-        dataset = load_dataset("json", data_files=path, split="train")
-        dataset = dataset.filter(
-            lambda example: example["lang"] == self.LANGUAGE
-            and example["answers"][0].lower() not in ("no answer", "yes", "no")
-        )
-        return dataset
+def _create_mkqa_task_class(language: str) -> type[MIAQABase]:
+    class _MKQA(MIAQABase, metaclass=ABCMeta):
+        LANGUAGE = language
+
+        def _get_task_dataset(self) -> Dataset:
+            path = os.path.join(os.path.dirname(__file__), "data", f"mkqa-{language}.jsonl")
+            dataset = load_dataset("json", data_files=path, split="train")
+            dataset = dataset.filter(lambda example: example["answers"][0].lower() not in ("no answer", "yes", "no"))
+            return dataset
+
+    return _MKQA
 
 
-class XORQAEn(XORQA):
-    LANGUAGE: str = "en"
+def _create_xorqa_task_class(language: str) -> type[MIAQABase]:
+    class _XORQA(MIAQABase):
+        LANGUAGE = language
+
+        def _get_task_dataset(self) -> Dataset:
+            path = os.path.join(os.path.dirname(__file__), "data", "mia_2022_dev_xorqa.jsonl")
+            dataset = load_dataset("json", data_files=path, split="train")
+            dataset = dataset.filter(
+                lambda example: example["lang"] == language
+                and example["answers"][0].lower() not in ("no answer", "yes", "no")
+            )
+            return dataset
+
+    return _XORQA
 
 
-class XORQAJa(XORQA):
-    LANGUAGE: str = "ja"
+def get_task_mapping() -> dict[str, type[MIAQABase]]:
+    tasks = {}
+    for lang in ["ar", "en", "es", "fi", "ja", "km", "ko", "ms", "ru", "sv", "tr", "zh_cn"]:
+        tasks[f"mkqa_{lang.replace('zh_cn', 'zh')}"] = _create_mkqa_task_class(lang)
 
+    for lang in ["ar", "bn", "fi", "ja", "ko", "ru", "te"]:
+        tasks[f"xorqa_{lang}"] = _create_xorqa_task_class(lang)
 
-class MKQA(MIAQABase, metaclass=ABCMeta):
-    def _get_task_dataset(self) -> Dataset:
-        path = os.path.join(os.path.dirname(__file__), "data", f"mkqa-{self.LANGUAGE}.jsonl")
-        dataset = load_dataset("json", data_files=path, split="train")
-        dataset = dataset.filter(lambda example: example["answers"][0].lower() not in ("no answer", "yes", "no"))
-        return dataset
-
-
-class MKQAEn(MKQA):
-    LANGUAGE: str = "en"
-
-
-class MKQAJa(MKQA):
-    LANGUAGE: str = "ja"
+    return tasks
