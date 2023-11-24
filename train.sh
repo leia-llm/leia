@@ -99,9 +99,9 @@ accelerate launch \
     \
     --trans_insertion_strategy ${TRANS_INSERTION_STRATEGY:-"none"} \
     --trans_insertion_prob  ${TRANS_INSERTION_PROB:-"1.0"} \
-    --trans_insertion_prob_decay ${TRANS_INSERTION_PROB_DECAY:-"false"} \
+    --trans_insertion_prob_decay ${TRANS_INSERTION_PROB_DECAY:-"true"} \
     \
-    --max_eval_samples_for_tasks ${MAX_EVAL_SAMPLES_FOR_TASKS:-"5000"} \
+    --max_eval_samples_for_tasks ${MAX_EVAL_SAMPLES_FOR_TASKS:-"2000"} \
     --use_dynamic_generation_length ${USE_DYNAMIC_GENERATION_LENGTH:-"true"} \
     \
     --log_level "info" \
