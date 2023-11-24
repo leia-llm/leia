@@ -39,6 +39,7 @@ class LeiaTrainingArguments(TrainingArguments):
     max_eval_samples_for_tasks: int | None = field(default=None)
     num_fewshot_samples_for_tasks: str | None = field(default=None)
     use_dynamic_generation_length: bool = field(default=True)
+    eval_at_first_step: bool = field(default=False)
 
 
 class EvaluateFirstStepCallback(TrainerCallback):
@@ -162,7 +163,8 @@ def main():
             "use_dynamic_generation_length": args.use_dynamic_generation_length,
         },
     )
-    trainer.add_callback(EvaluateFirstStepCallback())
+    if args.eval_at_first_step:
+        trainer.add_callback(EvaluateFirstStepCallback())
 
     if args.resume_from_checkpoint is not None:
         trainer.train(resume_from_checkpoint=args.resume_from_checkpoint)

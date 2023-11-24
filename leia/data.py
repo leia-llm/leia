@@ -101,7 +101,7 @@ class LeiaConstantLengthDataset(IterableDataset):
                     dataset_example_counter += 1
 
                     if self._trans_insertion_prob_decay:
-                        trans_insertion_prob = self._trans_insertion_prob * min(
+                        trans_insertion_prob = self._trans_insertion_prob * max(
                             1.0 - output_example_counter / self._max_num_examples, 0.0
                         )
                     input_ids += self._build_input_ids_from_example(example, trans_insertion_prob)
@@ -118,9 +118,7 @@ class LeiaConstantLengthDataset(IterableDataset):
                     input_ids = input_ids[self._max_length :]
 
             if self._dataset_size is not None:
-                logger.info(
-                    f"finished epoch {epoch_counter} #token: {token_counter} progress: {(dataset_example_counter/self._dataset_size * 100):.2f}%"
-                )
+                logger.info(f"finished epoch {epoch_counter}")
 
             epoch_counter += 1
 
