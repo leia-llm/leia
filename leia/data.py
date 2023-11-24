@@ -1,4 +1,5 @@
 import logging
+import random
 from typing import Iterator
 
 import torch
@@ -13,23 +14,16 @@ class LeiaDataCollator:
     def __init__(
         self,
         tokenizer: PreTrainedTokenizerBase,
-        entity_vocab: dict[str, int],
         max_length: int | None = None,
-        max_entity_length: int | None = None,
-        do_language_modeling: bool = False,
         padding: str = "max_length",
     ):
         self._tokenizer = tokenizer
-        self._entity_vocab = entity_vocab
         self._max_length = max_length
-        self._max_entity_length = max_entity_length
-        self._do_language_modeling = do_language_modeling
         self._padding = padding
 
         assert padding in ("longest", "max_length"), "Padding must be either 'longest' or 'max_length'"
         if padding == "max_length":
             assert max_length is not None, "max_length must be specified if padding is 'max_length'"
-            assert max_entity_length is not None, "max_entity_length must be specified if padding is 'max_length'"
 
     def __call__(self, examples: list[dict[str, torch.Tensor]]) -> dict[str, torch.Tensor]:
         batch = self._tokenizer.pad(
@@ -40,29 +34,13 @@ class LeiaDataCollator:
             return_tensors="pt",
         )
 
-        max_entity_length = self._max_entity_length
-        if self._padding == "longest":
-            max_entity_length = max(len(example["entity_ids"]) for example in examples)
+        labels = batch["input_ids"].clone()
+        labels[labels == self._tokenizer.pad_token_id] = -100
+        if "<trans>" in self._tokenizer.vocab:
+            labels[labels == self._tokenizer.vocab["<trans>"]] = -100
+            labels[labels == self._tokenizer.vocab["</trans>"]] = -100
 
-        batch["entity_ids"] = torch.full(
-            (len(examples), max_entity_length), self._entity_vocab["<pad>"], dtype=torch.long
-        )
-        batch["entity_prev_token_positions"] = torch.zeros((len(examples), max_entity_length), dtype=torch.long)
-        batch["entity_last_token_positions"] = torch.zeros((len(examples), max_entity_length), dtype=torch.long)
-
-        for n, example in enumerate(examples):
-            batch["entity_ids"][n, : example["entity_ids"].size(0)].copy_(example["entity_ids"])
-            batch["entity_prev_token_positions"][n, : example["entity_prev_token_positions"].size(0)].copy_(
-                example["entity_prev_token_positions"]
-            )
-            batch["entity_last_token_positions"][n, : example["entity_last_token_positions"].size(0)].copy_(
-                example["entity_last_token_positions"]
-            )
-
-        if self._do_language_modeling:
-            labels = batch["input_ids"].clone()
-            labels[labels == self._tokenizer.pad_token_id] = -100
-            batch["labels"] = labels
+        batch["labels"] = labels
 
         return batch
 
@@ -71,22 +49,29 @@ class LeiaConstantLengthDataset(IterableDataset):
     def __init__(
         self,
         dataset: Dataset,
+        dataset_size: int,
         max_length: int,
-        max_entity_length: int,
-        entity_vocab_size: int,
-        infinite: bool = True,
+        max_num_examples: int,
+        trans_start_token_id: int,
+        trans_end_token_id: int,
+        trans_insertion_prob: float,
+        trans_insertion_prob_decay: bool,
+        trans_insertion_strategy: str,
         shuffle: bool = False,
         seed: int = 42,
-        dataset_size: int | None = None,
     ):
         self._dataset = dataset
+        self._dataset_size = dataset_size
         self._max_length = max_length
-        self._max_entity_length = max_entity_length
-        self._entity_vocab_size = entity_vocab_size
-        self._infinite = infinite
+        self._max_num_examples = max_num_examples
+        self._trans_start_token_id = trans_start_token_id
+        self._trans_end_token_id = trans_end_token_id
+        self._trans_insertion_prob = trans_insertion_prob
+        self._trans_insertion_prob_decay = trans_insertion_prob_decay
+        self._trans_insertion_strategy = trans_insertion_strategy
         self._shuffle = shuffle
         self._seed = seed
-        self._dataset_size = dataset_size
+        self._rnd = random.Random(seed)
 
     def __iter__(self) -> Iterator[dict[str, torch.Tensor]]:
         worker_info = torch.utils.data.get_worker_info()
@@ -94,13 +79,12 @@ class LeiaConstantLengthDataset(IterableDataset):
             worker_info is None or worker_info.num_workers == 1
         ), "LeiaConstantLengthDataset does not support multiprocessing"
 
-        buffer = []
-        buffer_length = 0
         epoch_counter = 0
-        example_counter = 0
+        dataset_example_counter = 0
+        output_example_counter = 0
         token_counter = 0
-        current_example = None
-
+        input_ids: list[int] = []
+        trans_insertion_prob = self._trans_insertion_prob
         while True:
             dataset = self._dataset
             if self._shuffle:
@@ -108,87 +92,65 @@ class LeiaConstantLengthDataset(IterableDataset):
             dataset_iter = iter(dataset)
 
             while True:
-                if current_example is None:
+                if len(input_ids) < self._max_length:
                     try:
-                        current_example = next(dataset_iter)
-                        example_counter += 1
+                        example = next(dataset_iter)
                     except StopIteration:
                         break
 
-                buffer_length += len(current_example["input_ids"])
-                buffer.append(current_example)
-                current_example = None
-                if example_counter != 1 and example_counter % 10000 == 0 and self._dataset_size is not None:
-                    logger.info(
-                        f"epoch: {epoch_counter} #token: {token_counter} progress: {(example_counter/self._dataset_size * 100):.2f}%"
-                    )
+                    dataset_example_counter += 1
+                    if dataset_example_counter != 1 and dataset_example_counter % 10000 == 0:
+                        logger.info(
+                            f"epoch: {epoch_counter} #token: {token_counter} progress: {(dataset_example_counter / self._dataset_size* 100):.2f}%"
+                        )
 
-                if buffer_length >= self._max_length:
-                    input_ids = []
-                    entity_ids = []
-                    entity_prev_token_positions = []
-                    entity_last_token_positions = []
-                    for example in buffer:
-                        offset = len(input_ids)
-                        input_ids += example["input_ids"]
-                        if "entity_ids" in example and example["entity_ids"] is not None:
-                            for entity_id, prev_token_position, last_token_position in zip(
-                                example["entity_ids"],
-                                example["entity_prev_token_positions"],
-                                example["entity_last_token_positions"],
-                            ):
-                                if entity_id >= self._entity_vocab_size:
-                                    continue
-                                prev_token_position += offset
-                                last_token_position += offset
-                                if last_token_position < self._max_length:
-                                    entity_ids.append(entity_id)
-                                    entity_prev_token_positions.append(prev_token_position)
-                                    entity_last_token_positions.append(last_token_position)
+                    if self._trans_insertion_prob_decay:
+                        trans_insertion_prob = self._trans_insertion_prob * min(
+                            1.0 - output_example_counter / self._max_num_examples, 0.0
+                        )
+                    input_ids += self._build_input_ids_from_example(example, trans_insertion_prob)
 
-                    yield {
-                        "input_ids": torch.tensor(input_ids[: self._max_length]),
-                        "entity_ids": torch.tensor(entity_ids[: self._max_entity_length]),
-                        "entity_prev_token_positions": torch.tensor(
-                            entity_prev_token_positions[: self._max_entity_length]
-                        ),
-                        "entity_last_token_positions": torch.tensor(
-                            entity_last_token_positions[: self._max_entity_length]
-                        ),
-                    }
+                if len(input_ids) >= self._max_length:
+                    yield {"input_ids": torch.tensor(input_ids[: self._max_length])}
                     token_counter += self._max_length
+                    output_example_counter += 1
+                    if output_example_counter == self._max_num_examples:
+                        break
+                    input_ids = input_ids[self._max_length :]
 
-                    # The remaining part of the example is processed in the next batch
-                    remaining_input_ids = input_ids[self._max_length :]
-                    if remaining_input_ids:
-                        current_example = {
-                            "input_ids": remaining_input_ids,
-                            "entity_ids": [],
-                            "entity_prev_token_positions": [],
-                            "entity_last_token_positions": [],
-                        }
-                        offset = len(buffer[-1]["input_ids"]) - len(remaining_input_ids)
-                        for entity_id, prev_token_position, last_token_position in zip(
-                            example["entity_ids"],
-                            example["entity_prev_token_positions"],
-                            example["entity_last_token_positions"],
-                        ):
-                            if prev_token_position >= offset:
-                                prev_token_position -= offset
-                                last_token_position -= offset
-                                current_example["entity_ids"].append(entity_id)
-                                current_example["entity_prev_token_positions"].append(prev_token_position)
-                                current_example["entity_last_token_positions"].append(last_token_position)
-
-                    buffer = []
-                    buffer_length = 0
-
-            if not self._infinite:
+            if output_example_counter == self._max_num_examples:
                 break
 
             if self._dataset_size is not None:
                 logger.info(
-                    f"finished epoch {epoch_counter} #token: {token_counter} progress: {(example_counter/self._dataset_size * 100):.2f}%"
+                    f"finished epoch {epoch_counter} #token: {token_counter} progress: {(dataset_example_counter/self._dataset_size * 100):.2f}%"
                 )
 
             epoch_counter += 1
+
+    def _build_input_ids_from_example(self, example: dict, trans_insertion_prob: float) -> list[int]:
+        input_ids = example["input_ids"]
+        if "entity_start_positions" in example:
+            for start_position, end_position, entity_input_ids in zip(
+                reversed(example["entity_start_positions"]),
+                reversed(example["entity_end_positions"]),
+                reversed(example["alternative_entity_input_ids"]),
+            ):
+                if self._rnd.random() > trans_insertion_prob:
+                    continue
+                entity_input_ids = [self._trans_start_token_id] + entity_input_ids + [self._trans_end_token_id]
+
+                strategy = self._trans_insertion_strategy
+                if self._trans_insertion_strategy == "random":
+                    strategy = random.choice(["left", "right"])
+
+                if strategy == "left":
+                    input_ids = input_ids[:start_position] + entity_input_ids + input_ids[start_position:]
+                elif strategy == "right":
+                    input_ids = input_ids[:end_position] + entity_input_ids + input_ids[end_position:]
+                elif strategy == "replace":
+                    input_ids = input_ids[:start_position] + entity_input_ids + input_ids[end_position:]
+                else:
+                    assert strategy == "none", f"Invalid strategy: {self._trans_insertion_strategy}"
+
+        return input_ids

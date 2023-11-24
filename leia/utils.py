@@ -1,11 +1,8 @@
-from typing import Any
-
-
 def normalize_wikipedia_title(title: str) -> str:
     return (title[0].upper() + title[1:]).replace("_", " ")
 
 
-def load_tsv_mapping(mapping_file: str, value_type: type = str) -> dict[str, Any]:
+def load_tsv_mapping(mapping_file: str, value_type: type = str) -> dict:
     mapping = {}
     with open(mapping_file, "r") as f:
         for line in f:

@@ -1,8 +1,6 @@
 from typing import Any
 
 from datasets import Dataset
-import torch
-from torch import nn
 from transformers.trainer import Trainer
 
 from leia.tasks import get_task, LoglikelihoodTask, GenerationTask
@@ -44,68 +42,6 @@ class LeiaTrainer(Trainer):
         self._eval_generation_task_kwargs = {}
         if eval_generation_task_kwargs is not None:
             self._eval_generation_task_kwargs = eval_generation_task_kwargs
-
-        self._lm_loss_count = torch.tensor(0, device=self.args.device)
-        self._prev_token_loss_count = torch.tensor(0, device=self.args.device)
-        self._last_token_loss_count = torch.tensor(0, device=self.args.device)
-
-        self._lm_loss = torch.tensor(0.0, device=self.args.device)
-        self._prev_token_loss = torch.tensor(0.0, device=self.args.device)
-        self._last_token_loss = torch.tensor(0.0, device=self.args.device)
-
-        self._prev_token_accuracy = torch.tensor(0.0, device=self.args.device)
-        self._last_token_accuracy = torch.tensor(0.0, device=self.args.device)
-
-    def compute_loss(self, model: nn.Module, inputs: dict, return_outputs: bool = False) -> torch.Tensor | tuple:
-        loss, outputs = super().compute_loss(model, inputs, return_outputs=True)
-        if outputs.lm_loss is not None:
-            self._lm_loss += outputs.lm_loss
-            self._lm_loss_count += 1
-        if outputs.entity_prev_token_loss is not None:
-            self._prev_token_loss += outputs.entity_prev_token_loss
-            self._prev_token_accuracy += outputs.entity_prev_token_accuracy
-            self._prev_token_loss_count += 1
-        if outputs.entity_last_token_loss is not None:
-            self._last_token_loss += outputs.entity_last_token_loss
-            self._last_token_accuracy += outputs.entity_last_token_accuracy
-            self._last_token_loss_count += 1
-
-        return (loss, outputs) if return_outputs else loss
-
-    def _maybe_log_save_evaluate(self, *args, **kwargs):
-        if self.control.should_log:
-            log_dict = {}
-            lm_loss_count = self.accelerator.gather(self._lm_loss_count).sum().item()
-            if lm_loss_count > 0:
-                lm_loss_scalar = self.accelerator.gather(self._lm_loss).sum().item()
-                log_dict["lm_loss"] = round(lm_loss_scalar / lm_loss_count, 4)
-                self._lm_loss = torch.tensor(0.0, device=self.args.device)
-                self._lm_loss_count = torch.tensor(0, device=self.args.device)
-
-            prev_token_loss_count = self.accelerator.gather(self._prev_token_loss_count).sum().item()
-            if prev_token_loss_count > 0:
-                prev_token_loss_scalar = self.accelerator.gather(self._prev_token_loss).sum().item()
-                prev_token_accuracy_scalar = self.accelerator.gather(self._prev_token_accuracy).sum().item()
-                log_dict["prev_token_loss"] = round(prev_token_loss_scalar / prev_token_loss_count, 4)
-                log_dict["prev_token_accuracy"] = round(prev_token_accuracy_scalar / prev_token_loss_count, 4)
-                self._prev_token_loss = torch.tensor(0.0, device=self.args.device)
-                self._prev_token_accuracy = torch.tensor(0.0, device=self.args.device)
-                self._prev_token_loss_count = torch.tensor(0, device=self.args.device)
-
-            last_token_loss_count = self.accelerator.gather(self._last_token_loss_count).sum().item()
-            if last_token_loss_count > 0:
-                last_token_loss_scalar = self.accelerator.gather(self._last_token_loss).sum().item()
-                last_token_accuracy_scalar = self.accelerator.gather(self._last_token_accuracy).sum().item()
-                log_dict["last_token_loss"] = round(last_token_loss_scalar / last_token_loss_count, 4)
-                log_dict["last_token_accuracy"] = round(last_token_accuracy_scalar / last_token_loss_count, 4)
-                self._last_token_loss = torch.tensor(0.0, device=self.args.device)
-                self._last_token_accuracy = torch.tensor(0.0, device=self.args.device)
-                self._last_token_loss_count = torch.tensor(0, device=self.args.device)
-
-            self.log(log_dict)
-            self.control.should_log = True
-
-        super()._maybe_log_save_evaluate(*args, **kwargs)
 
     def evaluate(
         self,

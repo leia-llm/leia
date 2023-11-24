@@ -8,10 +8,6 @@ if [[ -z ${MODEL_NAME_OR_PATH} ]]; then
     echo "MODEL_NAME_OR_PATH is not set"
     exit 1
 fi
-if [[ -z ${ENTITY_EMBEDDING_DIR} ]]; then
-    echo "ENTITY_EMBEDDING_DIR is not set"
-    exit 1
-fi
 if [[ -z ${WIKIPEDIA_DATA_DIR} ]]; then
     echo "WIKIPEDIA_DATA_DIR is not set"
     exit 1
@@ -22,7 +18,7 @@ if [[ -z ${LANGUAGE} ]]; then
 fi
 
 NUM_PROCESSES=${NUM_PROCESSES:-`nvidia-smi --query-gpu=name --format=csv,noheader | wc -l`}
-BATCH_SIZE=${BATCH_SIZE:-"128"}
+BATCH_SIZE=${BATCH_SIZE:-"512"}
 PER_DEVICE_TRAIN_BATCH_SIZE=${PER_DEVICE_TRAIN_BATCH_SIZE:-"1"}    
 GRADIENT_ACCUMULATION_STEPS=$((${BATCH_SIZE} / ${PER_DEVICE_TRAIN_BATCH_SIZE} / ${NUM_PROCESSES}))
 
@@ -53,15 +49,6 @@ fi
 if [[ ! -z ${NUM_FEWSHOT_SAMPLES_FOR_TASKS} ]]; then
     ARGS="${ARGS} --num_fewshot_samples_for_tasks ${NUM_FEWSHOT_SAMPLES_FOR_TASKS}"
 fi
-if [[ ! -z ${NUM_TRAIN_WIKIPEDIA_SAMPLES} ]]; then
-    ARGS="${ARGS} --num_train_wikipedia_samples ${NUM_TRAIN_WIKIPEDIA_SAMPLES}"
-fi
-if [[ ! -z ${NUM_EVAL_WIKIPEDIA_SAMPLES} ]]; then
-    ARGS="${ARGS} --num_eval_wikipedia_samples ${NUM_EVAL_WIKIPEDIA_SAMPLES}"
-fi
-if [[ ! -z ${SKIP_WIKIPEDIA_SAMPLES} ]]; then
-    ARGS="${ARGS} --skip_wikipedia_samples ${SKIP_WIKIPEDIA_SAMPLES}"
-fi
 if [[ ! -z ${RESUME_FROM_CHECKPOINT} ]]; then
     ARGS="${ARGS} --resume_from_checkpoint ${RESUME_FROM_CHECKPOINT}"
 fi
@@ -87,7 +74,6 @@ accelerate launch \
     --output_dir ${OUTPUT_DIR:-"runs/${RUN_NAME}"} \
     \
     --model_name_or_path ${MODEL_NAME_OR_PATH} \
-    --entity_embedding_dir "${ENTITY_EMBEDDING_DIR}/en_${DIR_NAME_SUFFIX}" \
     --wikipedia_dataset_dir "${WIKIPEDIA_DATA_DIR}/${LANGUAGE}_${DIR_NAME_SUFFIX}" \
     \
     --text_dataset_path ${TEXT_DATASET_PATH:-""} \
@@ -98,7 +84,7 @@ accelerate launch \
     --per_device_eval_batch_size ${PER_DEVICE_EVAL_BATCH_SIZE:-"2"} \
     --gradient_accumulation_steps ${GRADIENT_ACCUMULATION_STEPS} \
     --gradient_checkpointing ${GRADIENT_CHECKPOINTING:-"true"} \
-    --learning_rate ${LEARNING_RATE:-"3e-5"} \
+    --learning_rate ${LEARNING_RATE:-"2e-5"} \
     --lr_scheduler_type ${LR_SCHEDULER_TYPE:-"cosine"} \
     --max_steps ${MAX_STEPS} \
     --warmup_steps ${WARMUP_STEPS} \
@@ -110,21 +96,13 @@ accelerate launch \
     --evaluation_strategy "steps" \
     \
     --max_length ${MAX_LENGTH} \
-    --max_entity_length ${MAX_ENTITY_LENGTH:-"128"} \
-    --entity_vocab_size ${ENTITY_VOCAB_SIZE:-"300000"} \
     \
-    --layer_index ${LAYER_INDEX:-"32"} \
-    --similarity_function ${SIMILARITY_FUNCTION:-"cosine"} \
-    --temperature ${TEMPERATURE:-"0.01"} \
-    --use_entity_prev_token_prediction ${USE_ENTITY_PREV_TOKEN_PREDICTION:-"true"} \
-    --use_entity_last_token_prediction ${USE_ENTITY_LAST_TOKEN_PREDICTION:-"true"} \
-    --use_entity_decoder_activation ${USE_ENTITY_DECODER_ACTIVATION:-"false"} \
+    --trans_insertion_strategy ${TRANS_INSERTION_STRATEGY:-"none"} \
+    --trans_insertion_prob  ${TRANS_INSERTION_PROB:-"1.0"} \
+    --trans_insertion_prob_decay ${TRANS_INSERTION_PROB_DECAY:-"false"} \
     \
     --max_eval_samples_for_tasks ${MAX_EVAL_SAMPLES_FOR_TASKS:-"5000"} \
     --use_dynamic_generation_length ${USE_DYNAMIC_GENERATION_LENGTH:-"true"} \
-    \
-    --train_entity_dense_only ${TRAIN_ENTITY_DENSE_ONLY:-"false"} \
-    --load_entity_dense_weights ${LOAD_ENTITY_DENSE_WEIGHTS:-"false"} \
     \
     --log_level "info" \
     --logging_steps "10" \
