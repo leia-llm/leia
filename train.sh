@@ -103,6 +103,7 @@ accelerate launch \
     \
     --max_eval_samples_for_tasks ${MAX_EVAL_SAMPLES_FOR_TASKS:-"2000"} \
     --use_dynamic_generation_length ${USE_DYNAMIC_GENERATION_LENGTH:-"true"} \
+    --eval_at_first_step ${EVAL_AT_FIRST_STEP:-"false"} \
     \
     --log_level "info" \
     --logging_steps "10" \
