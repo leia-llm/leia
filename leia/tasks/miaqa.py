@@ -69,7 +69,7 @@ class MIAQABase(GenerationTask, metaclass=ABCMeta):
 
     def _create_requests(self, example: dict, context: str) -> list[GenerationRequest]:
         max_generation_length = max(
-            len(self._tokenizer.encode(answer, add_special_tokens=False)) for answer in example["answers"]
+            len(self._tokenizer.encode(" " + answer, add_special_tokens=False)) for answer in example["answers"]
         )
         requests = [GenerationRequest(context, stop_sequences=["\n"], max_generation_length=max_generation_length)]
         return requests
