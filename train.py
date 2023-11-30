@@ -171,9 +171,8 @@ def main():
     else:
         trainer.train()
 
-    # if args.save_strategy != "no":
-    #     trainer.save_state()
-    #     trainer.save_model()
+    trainer.save_state()
+    trainer.save_model()
 
 
 if __name__ == "__main__":
