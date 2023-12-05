@@ -15,20 +15,14 @@ class LeiaDataCollator:
         self,
         tokenizer: PreTrainedTokenizerBase,
         max_length: int | None = None,
-        padding: str = "max_length",
     ):
         self._tokenizer = tokenizer
         self._max_length = max_length
-        self._padding = padding
-
-        assert padding in ("longest", "max_length"), "Padding must be either 'longest' or 'max_length'"
-        if padding == "max_length":
-            assert max_length is not None, "max_length must be specified if padding is 'max_length'"
 
     def __call__(self, examples: list[dict[str, torch.Tensor]]) -> dict[str, torch.Tensor]:
         batch = self._tokenizer.pad(
             {"input_ids": [example["input_ids"] for example in examples]},
-            padding=self._padding,
+            padding="max_length",
             max_length=self._max_length,
             return_attention_mask=True,
             return_tensors="pt",
