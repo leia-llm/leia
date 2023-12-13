@@ -85,7 +85,7 @@ accelerate launch \
     --gradient_accumulation_steps ${GRADIENT_ACCUMULATION_STEPS} \
     --gradient_checkpointing ${GRADIENT_CHECKPOINTING:-"true"} \
     --learning_rate ${LEARNING_RATE:-"2e-5"} \
-    --lr_scheduler_type ${LR_SCHEDULER_TYPE:-"cosine"} \
+    --min_lr_ratio ${MIN_LR_RATIO:-"0.1"} \
     --max_steps ${MAX_STEPS} \
     --warmup_steps ${WARMUP_STEPS} \
     --weight_decay ${WEIGHT_DECAY:-"0.1"} \
@@ -108,9 +108,9 @@ accelerate launch \
     --log_level "info" \
     --logging_steps "10" \
     \
-    --save_strategy ${SAVE_STRATEGY:-"no"} \
+    --save_strategy ${SAVE_STRATEGY:-"steps"} \
     --save_steps ${SAVE_STEPS} \
-    --save_total_limit ${SAVE_TOTAL_LIMIT:-"1"} \
+    --save_total_limit ${SAVE_TOTAL_LIMIT:-"5"} \
     \
     --seed "42" \
     --dataloader_num_workers "1" \

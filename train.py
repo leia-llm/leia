@@ -34,6 +34,7 @@ class LeiaTrainingArguments(TrainingArguments):
     trans_insertion_prob_decay: bool = field(default=False)
 
     max_length: int = field(default=1024)
+    min_lr_ratio: float = field(default=0.0)
 
     eval_tasks: str | None = field(default=None)
     max_eval_samples_for_tasks: int | None = field(default=None)
@@ -93,10 +94,6 @@ def main():
     train_dataset = train_dataset.to_iterable_dataset(num_shards=1024)
 
     if args.text_dataset_path:
-        assert (
-            not args.train_entity_dense_only
-        ), "text_dataset_path should not be set if train_entity_dense_only is enabled"
-
         text_dataset = load_dataset(args.text_dataset_path, name=args.text_dataset_name, split="train", streaming=True)
 
         text_dataset = text_dataset.map(
