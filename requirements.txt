@@ -6,7 +6,7 @@ peft==0.4.0
 sentencepiece==0.1.99
 tiktoken==0.4.0
 torch==2.1.0
-transformers==4.34.0
+transformers==4.35.2
 tqdm==4.65.0
 unidic-lite==1.0.8
 wandb==0.15.12
