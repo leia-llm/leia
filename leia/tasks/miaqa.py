@@ -99,7 +99,7 @@ def _create_mkqa_task_class(language: str) -> type[MIAQABase]:
         LANGUAGE = language
 
         def _get_task_dataset(self) -> Dataset:
-            path = os.path.join(os.path.dirname(__file__), "data", f"mkqa-{language}.jsonl")
+            path = os.path.join(os.path.dirname(__file__), "data", "miaqa", f"mkqa-{language}.jsonl")
             dataset = load_dataset("json", data_files=path, split="train")
             dataset = dataset.filter(lambda example: example["answers"][0].lower() not in ("no answer", "yes", "no"))
             return dataset
@@ -112,7 +112,7 @@ def _create_xorqa_task_class(language: str) -> type[MIAQABase]:
         LANGUAGE = language
 
         def _get_task_dataset(self) -> Dataset:
-            path = os.path.join(os.path.dirname(__file__), "data", "mia_2022_dev_xorqa.jsonl")
+            path = os.path.join(os.path.dirname(__file__), "data", "miaqa", "mia_2022_dev_xorqa.jsonl")
             dataset = load_dataset("json", data_files=path, split="train")
             dataset = dataset.filter(
                 lambda example: example["lang"] == language
