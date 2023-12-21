@@ -31,7 +31,7 @@ class PAWSXBase(LoglikelihoodTask, metaclass=ABCMeta):
     def _create_context(
         self, example: dict, train_dataset: list[dict] | None, task_dataset: list[dict], rnd: random.Random
     ) -> str:
-        context = self.DESCRIPTION
+        context = self._get_description()
 
         if self._num_fewshot_samples != 0:
             fewshot_examples = rnd.sample(train_dataset, self._num_fewshot_samples)

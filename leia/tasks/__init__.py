@@ -4,10 +4,7 @@ from .cmmlu import get_task_mapping as cmmlu_get_task_mapping
 from .exams import get_task_mapping as exams_get_task_mapping
 from .headqa import get_task_mapping as headqa_get_task_mapping
 from .jaqket import Jaqket
-from .jcommonsenseqa import JCommonsenseQA
-from .jnli import JNLI
-from .jsquad import JSQuAD
-from .marc_ja import MARCJa
+from .llm_jp_eval import get_task_mapping as llm_jp_eval_get_task_mapping
 from .miaqa import get_task_mapping as miaqa_get_task_mapping
 from .pawsx import get_task_mapping as pawsx_get_task_mapping
 from .xcodah import get_task_mapping as xcodah_get_task_mapping
@@ -19,15 +16,12 @@ from .xwinograd import get_task_mapping as xwinograd_get_task_mapping
 
 _TASKS: dict[str, type[BaseTask]] = {
     "jaqket": Jaqket,
-    "jcommonsenseqa": JCommonsenseQA,
-    "jnli": JNLI,
-    "jsquad": JSQuAD,
-    "marc_ja": MARCJa,
 }
 _TASKS.update(belebele_get_task_mapping())
 _TASKS.update(cmmlu_get_task_mapping())
 _TASKS.update(exams_get_task_mapping())
 _TASKS.update(headqa_get_task_mapping())
+_TASKS.update(llm_jp_eval_get_task_mapping())
 _TASKS.update(miaqa_get_task_mapping())
 _TASKS.update(pawsx_get_task_mapping())
 _TASKS.update(xcodah_get_task_mapping())

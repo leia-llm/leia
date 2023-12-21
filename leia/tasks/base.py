@@ -66,8 +66,6 @@ class MultiTokenEOSCriteria(StoppingCriteria):
 
 
 class BaseTask:
-    DESCRIPTION: str = ""
-
     def __init__(
         self,
         model: PreTrainedModel,
@@ -157,10 +155,13 @@ class BaseTask:
     def _process_results(self, example: dict, results: list[float | str]) -> dict:
         pass
 
+    def _get_description(self) -> str:
+        return ""
+
     def _create_context(
         self, example: dict, train_dataset: list[dict] | None, task_dataset: list[dict], rnd: random.Random
     ) -> str:
-        context = self.DESCRIPTION
+        context = self._get_description()
 
         if self._num_fewshot_samples != 0:
             if train_dataset is not None:
