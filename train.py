@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 
 import datasets
 import transformers
-from datasets import interleave_datasets, load_dataset, load_from_disk
+from datasets import concatenate_datasets, interleave_datasets, load_dataset, load_from_disk
 from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
@@ -89,9 +89,12 @@ def main():
     embeddings_data[-num_new_tokens:] = embeddings_avg
 
     logger.info("Loading datasets...")
-    train_dataset = load_from_disk(args.wikipedia_dataset_dir)
-    train_dataset_size = len(train_dataset)
-    train_dataset = train_dataset.to_iterable_dataset(num_shards=1024)
+    wikipedia_datasets = []
+    for wikipedia_dataset_dir in args.wikipedia_dataset_dir.split(","):
+        wikipedia_datasets.append(load_from_disk(wikipedia_dataset_dir))
+    wikipedia_dataset = concatenate_datasets(wikipedia_datasets)
+    wikipedia_dataset_size = len(wikipedia_dataset)
+    wikipedia_dataset = wikipedia_dataset.to_iterable_dataset(num_shards=1024)
 
     if args.text_dataset_path:
         text_dataset = load_dataset(args.text_dataset_path, name=args.text_dataset_name, split="train", streaming=True)
@@ -104,18 +107,21 @@ def main():
             features=datasets.Features({"input_ids": datasets.Sequence(datasets.Value(dtype="int16"))}),
         )
 
-        if args.text_dataset_sampling_prob > 0.0:
-            train_dataset = interleave_datasets(
-                [train_dataset, text_dataset],
-                probabilities=[
-                    1.0 - args.text_dataset_sampling_prob,
-                    args.text_dataset_sampling_prob,
-                ],
-                stopping_strategy="first_exhausted",
-                seed=args.seed,
-            )
-            # We assume that the text dataset is much larger than the Wikipedia dataset
-            train_dataset_size = int(train_dataset_size / (1.0 - args.text_dataset_sampling_prob))
+        train_dataset = interleave_datasets(
+            [wikipedia_dataset, text_dataset],
+            probabilities=[
+                1.0 - args.text_dataset_sampling_prob,
+                args.text_dataset_sampling_prob,
+            ],
+            stopping_strategy="first_exhausted",
+            seed=args.seed,
+        )
+        # We assume that the text dataset is much larger than the Wikipedia dataset
+        train_dataset_size = int(wikipedia_dataset_size / (1.0 - args.text_dataset_sampling_prob))
+
+    else:
+        train_dataset = wikipedia_dataset
+        train_dataset_size = wikipedia_dataset_size
 
     max_num_examples = (
         args.max_steps * args.gradient_accumulation_steps * args.per_device_train_batch_size * args.world_size

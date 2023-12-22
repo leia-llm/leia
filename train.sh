@@ -74,7 +74,7 @@ accelerate launch \
     --output_dir ${OUTPUT_DIR:-"runs/${RUN_NAME}"} \
     \
     --model_name_or_path ${MODEL_NAME_OR_PATH} \
-    --wikipedia_dataset_dir "${WIKIPEDIA_DATA_DIR}/${LANGUAGE}_dataset_${DIR_NAME_SUFFIX}" \
+    --wikipedia_dataset_dir ${WIKIPEDIA_DATASET_DIR:-"${WIKIPEDIA_DATA_DIR}/${LANGUAGE}_dataset_${DIR_NAME_SUFFIX}"} \
     \
     --text_dataset_path ${TEXT_DATASET_PATH:-""} \
     --text_dataset_name ${TEXT_DATASET_NAME:-""} \
