@@ -116,10 +116,12 @@ def main(args: argparse.Namespace) -> None:
         remove_columns=["text", "title", "anchors", "language"],
         features=datasets.Features(
             {
-                "input_ids": datasets.Sequence(datasets.Value(dtype="int16")),
+                "input_ids": datasets.Sequence(datasets.Value(dtype=args.input_ids_dtype)),
                 "entity_start_positions": datasets.Sequence(datasets.Value(dtype="int32")),
                 "entity_end_positions": datasets.Sequence(datasets.Value(dtype="int32")),
-                "alternative_entity_input_ids": datasets.Sequence(datasets.Sequence(datasets.Value(dtype="int16"))),
+                "alternative_entity_input_ids": datasets.Sequence(
+                    datasets.Sequence(datasets.Value(dtype=args.input_ids_dtype))
+                ),
             }
         ),
         fn_kwargs={
@@ -140,6 +142,7 @@ if __name__ == "__main__":
     parser.add_argument("--output_dir", type=str, required=True)
     parser.add_argument("--max_length", type=int)
     parser.add_argument("--num_workers", type=int, default=multiprocessing.cpu_count())
+    parser.add_argument("--input_ids_dtype", type=str, default="int16")
     args = parser.parse_args()
 
     main(args)

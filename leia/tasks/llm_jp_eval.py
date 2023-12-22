@@ -48,7 +48,7 @@ class LLMJPEvalBase(GenerationTask, metaclass=ABCMeta):
         return context
 
     def _create_requests(self, example: dict, context: str) -> list[GenerationRequest]:
-        max_generation_length = len(self._tokenizer.encode(example["output"], add_special_tokens=False)) + 1
+        max_generation_length = self._data["output_length"]
         requests = [GenerationRequest(context, stop_sequences=["\n"], max_generation_length=max_generation_length)]
         return requests
 
