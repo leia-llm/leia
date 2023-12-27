@@ -77,7 +77,6 @@ def _encode_examples(
                 continue
             alternative_entity_text = re.sub(r"\(.*?\)", "", alternative_entity_text).strip()
             entity_input_ids = tokenizer(alternative_entity_text, add_special_tokens=False)["input_ids"]
-            alternative_entity_input_ids.append(entity_input_ids)
 
             char_start = anchor["start"]
             char_end = anchor["end"]
@@ -87,6 +86,7 @@ def _encode_examples(
             start_position = char_token_mapping[char_start]
             end_position = char_token_mapping[char_end]
 
+            alternative_entity_input_ids.append(entity_input_ids)
             entity_start_positions.append(start_position)
             entity_end_positions.append(end_position)
 

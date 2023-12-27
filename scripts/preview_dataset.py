@@ -5,7 +5,7 @@ import os
 import datasets
 from transformers import AutoTokenizer
 
-from leia.data import LeiaConstantLengthDataset
+from leia.data import LeiaConstantLengthDataset, LeiaDataCollator
 
 logger = logging.getLogger(__name__)
 
@@ -16,6 +16,8 @@ RESET = "\033[0;0m"
 def main(args: argparse.Namespace) -> None:
     tokenizer = AutoTokenizer.from_pretrained(args.model_name)
     tokenizer.add_special_tokens({"additional_special_tokens": ["<trans>", "</trans>"]})
+    if tokenizer.pad_token_id is None:
+        tokenizer.pad_token_id = tokenizer.eos_token_id
 
     dataset = datasets.load_from_disk(args.dataset_dir)
     dataset = dataset.shuffle()
@@ -31,12 +33,16 @@ def main(args: argparse.Namespace) -> None:
         trans_insertion_prob_decay=False,
         trans_insertion_strategy=args.trans_insertion_strategy,
     )
+    collator = LeiaDataCollator(tokenizer=tokenizer, max_length=args.max_length)
     for example in dataset:
         os.system("clear")
-        text = tokenizer.decode(example["input_ids"])
+        example = collator([example])
+        text = tokenizer.decode(example["input_ids"][0])
         text = text.replace("<trans>", f"{BLUE}<trans>{RESET}")
         text = text.replace("</trans>", f"{BLUE}</trans>{RESET}")
         print(text)
+        trans_token_ids = example["input_ids"].masked_select(example["trans_token_mask"])
+        print("Inserted tokens:", tokenizer.decode(trans_token_ids))
         input("Press Enter to continue...")
 
 
@@ -47,7 +53,7 @@ if __name__ == "__main__":
     parser.add_argument("--max_length", type=int, default=2048)
     parser.add_argument("--trans_insertion_prob", type=float, default=1.0)
     parser.add_argument(
-        "--trans_insertion_strategy", type=str, choices=["random", "left", "right", "replace"], default="random"
+        "--trans_insertion_strategy", type=str, choices=["random", "left", "right", "replace"], default="right"
     )
     args = parser.parse_args()
 
