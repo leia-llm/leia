@@ -2,8 +2,10 @@ import logging
 from dataclasses import dataclass, field
 
 import datasets
+import torch
 import transformers
 from datasets import concatenate_datasets, interleave_datasets, load_dataset, load_from_disk
+from torch.nn import CrossEntropyLoss
 from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
@@ -12,6 +14,7 @@ from transformers import (
     TrainingArguments,
     set_seed,
 )
+from transformers.modeling_outputs import CausalLMOutputWithPast
 
 from leia.data import LeiaConstantLengthDataset, LeiaDataCollator
 from leia.trainer import LeiaTrainer
@@ -32,6 +35,7 @@ class LeiaTrainingArguments(TrainingArguments):
     trans_insertion_strategy: str = field(default="none")
     trans_insertion_prob: float = field(default=1.0)
     trans_insertion_prob_decay: bool = field(default=False)
+    trans_token_loss_weight: float = field(default=1.0)
 
     max_length: int = field(default=1024)
     min_lr_ratio: float = field(default=0.0)
@@ -76,6 +80,75 @@ def main():
         args.model_name_or_path,
         use_flash_attention_2=args.use_flash_attention_2,
     )
+
+    def custom_forward(
+        self,
+        input_ids: torch.LongTensor | None = None,
+        attention_mask: torch.Tensor | None = None,
+        trans_token_mask: torch.Tensor | None = None,
+        # position_ids: torch.Tensor | None = None,
+        # past_key_values: list[torch.Tensor] | None = None,
+        # inputs_embeds: torch.Tensor | None = None,
+        labels: torch.Tensor | None = None,
+        **kwargs
+        # use_cache: bool | None = None,
+        # output_attentions: bool | None = None,
+        # output_hidden_states: bool | None = None,
+        # return_dict: bool | None = None,
+    ) -> CausalLMOutputWithPast:
+        # output_hidden_states = (
+        #     output_hidden_states if output_hidden_states is not None else self.config.output_hidden_states
+        # )
+
+        outputs = self.model(
+            input_ids=input_ids,
+            attention_mask=attention_mask,
+            # position_ids=position_ids,
+            # past_key_values=past_key_values,
+            # inputs_embeds=inputs_embeds,
+            # use_cache=use_cache,
+            # output_attentions=output_attentions,
+            # output_hidden_states=output_hidden_states,
+            **kwargs
+            # return_dict=return_dict,
+        )
+
+        hidden_states = outputs[0]
+        logits = self.lm_head(hidden_states).float()
+
+        loss = None
+        if labels is not None:
+            shift_logits = logits[..., :-1, :].contiguous()
+            shift_labels = labels[..., 1:].contiguous()
+            shift_logits = shift_logits.view(-1, self.config.vocab_size)
+            shift_labels = shift_labels.view(-1)
+            shift_labels = shift_labels.to(shift_logits.device)
+            if args.trans_token_loss_weight != 1.0 and trans_token_mask is not None:
+                loss_fct = CrossEntropyLoss(reduction="none")
+                loss = loss_fct(shift_logits, shift_labels)
+                loss_weights = torch.ones_like(loss)
+                loss_weights += trans_token_mask.type_as(loss).view(-1) * (args.trans_token_loss_weight - 1.0)
+                loss_weights *= (shift_labels != -100).float()
+                loss *= loss_weights
+                loss = loss.mean()
+
+            else:
+                loss_fct = CrossEntropyLoss()
+                loss = loss_fct(shift_logits, shift_labels)
+
+        # if not return_dict:
+        #     output = (logits,) + outputs[1:]
+        #     return (loss,) + output if loss is not None else output
+
+        return CausalLMOutputWithPast(
+            loss=loss,
+            logits=logits,
+            past_key_values=outputs.past_key_values,
+            hidden_states=outputs.hidden_states,
+            attentions=outputs.attentions,
+        )
+
+    model.forward = custom_forward
 
     if args.local_rank == 0:
         logger.info(f"Model: {model}")
