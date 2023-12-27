@@ -101,6 +101,7 @@ accelerate launch \
     --trans_insertion_strategy ${TRANS_INSERTION_STRATEGY:-"none"} \
     --trans_insertion_prob  ${TRANS_INSERTION_PROB:-"1.0"} \
     --trans_insertion_prob_decay ${TRANS_INSERTION_PROB_DECAY:-"true"} \
+    --trans_token_loss_weight ${TRANS_TOKEN_LOSS_WEIGHT:-"1.0"} \
     \
     --max_eval_samples_for_tasks ${MAX_EVAL_SAMPLES_FOR_TASKS:-"2000"} \
     --use_dynamic_generation_length ${USE_DYNAMIC_GENERATION_LENGTH:-"true"} \

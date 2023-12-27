@@ -86,36 +86,12 @@ def main():
         input_ids: torch.LongTensor | None = None,
         attention_mask: torch.Tensor | None = None,
         trans_token_mask: torch.Tensor | None = None,
-        # position_ids: torch.Tensor | None = None,
-        # past_key_values: list[torch.Tensor] | None = None,
-        # inputs_embeds: torch.Tensor | None = None,
         labels: torch.Tensor | None = None,
-        **kwargs
-        # use_cache: bool | None = None,
-        # output_attentions: bool | None = None,
-        # output_hidden_states: bool | None = None,
-        # return_dict: bool | None = None,
+        **kwargs,
     ) -> CausalLMOutputWithPast:
-        # output_hidden_states = (
-        #     output_hidden_states if output_hidden_states is not None else self.config.output_hidden_states
-        # )
-
-        outputs = self.model(
-            input_ids=input_ids,
-            attention_mask=attention_mask,
-            # position_ids=position_ids,
-            # past_key_values=past_key_values,
-            # inputs_embeds=inputs_embeds,
-            # use_cache=use_cache,
-            # output_attentions=output_attentions,
-            # output_hidden_states=output_hidden_states,
-            **kwargs
-            # return_dict=return_dict,
-        )
-
+        outputs = self.model(input_ids=input_ids, attention_mask=attention_mask, **kwargs)
         hidden_states = outputs[0]
         logits = self.lm_head(hidden_states).float()
-
         loss = None
         if labels is not None:
             shift_logits = logits[..., :-1, :].contiguous()
@@ -124,6 +100,7 @@ def main():
             shift_labels = shift_labels.view(-1)
             shift_labels = shift_labels.to(shift_logits.device)
             if args.trans_token_loss_weight != 1.0 and trans_token_mask is not None:
+                trans_token_mask = trans_token_mask[..., 1:].contiguous()
                 loss_fct = CrossEntropyLoss(reduction="none")
                 loss = loss_fct(shift_logits, shift_labels)
                 loss_weights = torch.ones_like(loss)
@@ -131,14 +108,9 @@ def main():
                 loss_weights *= (shift_labels != -100).float()
                 loss *= loss_weights
                 loss = loss.mean()
-
             else:
                 loss_fct = CrossEntropyLoss()
                 loss = loss_fct(shift_logits, shift_labels)
-
-        # if not return_dict:
-        #     output = (logits,) + outputs[1:]
-        #     return (loss,) + output if loss is not None else output
 
         return CausalLMOutputWithPast(
             loss=loss,
@@ -148,7 +120,7 @@ def main():
             attentions=outputs.attentions,
         )
 
-    model.forward = custom_forward
+    model.__class__.forward = custom_forward
 
     if args.local_rank == 0:
         logger.info(f"Model: {model}")
