@@ -185,7 +185,9 @@ def main():
         seed=args.seed,
     )
 
-    data_collator = LeiaDataCollator(tokenizer=tokenizer, max_length=args.max_length)
+    data_collator = LeiaDataCollator(
+        tokenizer=tokenizer, max_length=args.max_length, return_token_mask=args.trans_token_loss_weight != 1.0
+    )
 
     eval_tasks = []
     if args.eval_tasks is not None:
