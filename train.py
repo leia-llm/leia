@@ -35,6 +35,7 @@ class LeiaTrainingArguments(TrainingArguments):
     trans_insertion_strategy: str = field(default="none")
     trans_insertion_prob: float = field(default=1.0)
     trans_insertion_prob_decay: bool = field(default=False)
+    trans_insertion_min_prob: float = field(default=0.0)
     trans_token_loss_weight: float = field(default=1.0)
 
     max_length: int = field(default=1024)
@@ -180,6 +181,7 @@ def main():
         trans_end_token_id=tokenizer.vocab["</trans>"],
         trans_insertion_prob=args.trans_insertion_prob,
         trans_insertion_prob_decay=args.trans_insertion_prob_decay,
+        trans_insertion_min_prob=args.trans_insertion_min_prob,
         trans_insertion_strategy=args.trans_insertion_strategy,
         shuffle=True,
         seed=args.seed,
