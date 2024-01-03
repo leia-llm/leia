@@ -1,9 +1,11 @@
 from .base import BaseTask, GenerationTask, LoglikelihoodTask
 from .belebele import get_task_mapping as belebele_get_task_mapping
 from .cmmlu import get_task_mapping as cmmlu_get_task_mapping
+from .jcommonsenseqa import JCommonsenseQA
 from .exams import get_task_mapping as exams_get_task_mapping
 from .headqa import get_task_mapping as headqa_get_task_mapping
 from .jaqket import Jaqket
+from .jsquad import JSQuAD
 from .llm_jp_eval import get_task_mapping as llm_jp_eval_get_task_mapping
 from .miaqa import get_task_mapping as miaqa_get_task_mapping
 from .pawsx import get_task_mapping as pawsx_get_task_mapping
@@ -16,6 +18,8 @@ from .xwinograd import get_task_mapping as xwinograd_get_task_mapping
 
 _TASKS: dict[str, type[BaseTask]] = {
     "jaqket": Jaqket,
+    "jcommonsenseqa": JCommonsenseQA,
+    "jsquad": JSQuAD,
 }
 _TASKS.update(belebele_get_task_mapping())
 _TASKS.update(cmmlu_get_task_mapping())

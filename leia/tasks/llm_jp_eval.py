@@ -110,12 +110,12 @@ def get_task_mapping() -> dict[str, type[LLMJPEvalBase]]:
     for task_name in (
         "jamp",
         "janli",
-        "jcommonsenseqa",
+        # "jcommonsenseqa",
         "jemhopqa",
         "jnli",
         "jsem",
         "jsick",
-        "jsquad",
+        # "jsquad",
         "jsts",
         "niilc",
     ):
