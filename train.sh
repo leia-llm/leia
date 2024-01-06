@@ -62,6 +62,7 @@ accelerate launch \
     --zero_stage 3 \
     --zero3_init_flag false \
     --zero3_save_16bit_model true \
+    --offload_optimizer_device ${OFFLOAD_OPTIMIZER_DEVICE:-"none"} \
     \
     --gradient_accumulation_steps ${GRADIENT_ACCUMULATION_STEPS} \
     --gradient_clipping ${GRADIENT_CLIPPING:-"1.0"} \
