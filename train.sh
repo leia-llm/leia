@@ -37,7 +37,10 @@ if [ `nvidia-smi | grep "V100" | wc -l` -eq 0 ]
 then
     echo "Using BF16 & flash attention 2"
     ACCELERATE_ARGS="--mixed_precision bf16"
-    ARGS="${ARGS} --bf16 true --use_flash_attention_2"
+    ARGS="${ARGS} --bf16 true"
+    if [[ -z ${NO_FLASH_ATTENTION_2} ]]; then
+        ARGS="${ARGS} --use_flash_attention_2"
+    fi
 else
     ACCELERATE_ARGS="--mixed_precision fp16"
     ARGS="${ARGS} --fp16 true"
