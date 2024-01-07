@@ -2,10 +2,8 @@ import logging
 from dataclasses import dataclass, field
 
 import datasets
-import torch
 import transformers
 from datasets import concatenate_datasets, interleave_datasets, load_dataset, load_from_disk
-from torch.nn import CrossEntropyLoss
 from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
@@ -14,7 +12,6 @@ from transformers import (
     TrainingArguments,
     set_seed,
 )
-from transformers.modeling_outputs import CausalLMOutputWithPast
 
 from leia.data import LeiaConstantLengthDataset, LeiaDataCollator
 from leia.trainer import LeiaTrainer

@@ -1,6 +1,5 @@
 from typing import Any
 
-import torch
 from datasets import Dataset
 from transformers.trainer import Trainer
 
