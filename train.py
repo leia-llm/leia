@@ -36,7 +36,6 @@ class LeiaTrainingArguments(TrainingArguments):
     trans_insertion_prob: float = field(default=1.0)
     trans_insertion_prob_decay: bool = field(default=False)
     trans_insertion_min_prob: float = field(default=0.0)
-    trans_token_loss_weight: float = field(default=1.0)
 
     max_length: int = field(default=1024)
     min_lr_ratio: float = field(default=0.0)
@@ -81,47 +80,6 @@ def main():
         args.model_name_or_path,
         use_flash_attention_2=args.use_flash_attention_2,
     )
-
-    def custom_forward(
-        self,
-        input_ids: torch.LongTensor | None = None,
-        attention_mask: torch.Tensor | None = None,
-        trans_token_mask: torch.Tensor | None = None,
-        labels: torch.Tensor | None = None,
-        **kwargs,
-    ) -> CausalLMOutputWithPast:
-        outputs = self.model(input_ids=input_ids, attention_mask=attention_mask, **kwargs)
-        hidden_states = outputs[0]
-        logits = self.lm_head(hidden_states).float()
-        loss = None
-        if labels is not None:
-            shift_logits = logits[..., :-1, :].contiguous()
-            shift_labels = labels[..., 1:].contiguous()
-            shift_logits = shift_logits.view(-1, self.config.vocab_size)
-            shift_labels = shift_labels.view(-1)
-            shift_labels = shift_labels.to(shift_logits.device)
-            if args.trans_token_loss_weight != 1.0 and trans_token_mask is not None:
-                trans_token_mask = trans_token_mask[..., 1:].contiguous()
-                loss_fct = CrossEntropyLoss(reduction="none")
-                loss = loss_fct(shift_logits, shift_labels)
-                loss_weights = torch.ones_like(loss)
-                loss_weights += trans_token_mask.type_as(loss).view(-1) * (args.trans_token_loss_weight - 1.0)
-                loss_weights *= (shift_labels != -100).float()
-                loss *= loss_weights
-                loss = loss.mean()
-            else:
-                loss_fct = CrossEntropyLoss()
-                loss = loss_fct(shift_logits, shift_labels)
-
-        return CausalLMOutputWithPast(
-            loss=loss,
-            logits=logits,
-            past_key_values=outputs.past_key_values,
-            hidden_states=outputs.hidden_states,
-            attentions=outputs.attentions,
-        )
-
-    model.__class__.forward = custom_forward
 
     if args.local_rank == 0:
         logger.info(f"Model: {model}")
@@ -187,9 +145,7 @@ def main():
         seed=args.seed,
     )
 
-    data_collator = LeiaDataCollator(
-        tokenizer=tokenizer, max_length=args.max_length, return_token_mask=args.trans_token_loss_weight != 1.0
-    )
+    data_collator = LeiaDataCollator(tokenizer=tokenizer, max_length=args.max_length)
 
     eval_tasks = []
     if args.eval_tasks is not None:

@@ -15,11 +15,9 @@ class LeiaDataCollator:
         self,
         tokenizer: PreTrainedTokenizerBase,
         max_length: int | None = None,
-        return_token_mask: bool = False,
     ):
         self._tokenizer = tokenizer
         self._max_length = max_length
-        self._return_token_mask = return_token_mask
 
     def __call__(self, examples: list[dict[str, torch.Tensor]]) -> dict[str, torch.Tensor]:
         batch = self._tokenizer.pad(
@@ -38,24 +36,6 @@ class LeiaDataCollator:
             trans_end_token_id = self._tokenizer.vocab["</trans>"]
             labels[labels == trans_start_token_id] = -100
             labels[labels == trans_end_token_id] = -100
-
-            if self._return_token_mask:
-                trans_token_mask = torch.zeros_like(labels, dtype=torch.bool)
-
-                for row_index in range(input_ids.size(0)):
-                    start_pos = None
-                    for col_index in range(input_ids.size(1)):
-                        input_id = input_ids[row_index, col_index]
-                        if input_id == trans_start_token_id:
-                            start_pos = col_index + 1
-                        elif input_id == trans_end_token_id:
-                            if start_pos is not None:
-                                trans_token_mask[row_index, start_pos:col_index] = True
-                            start_pos = None
-                    if start_pos is not None:
-                        trans_token_mask[row_index, start_pos:] = True
-
-                batch["trans_token_mask"] = trans_token_mask
 
         batch["labels"] = labels
 
