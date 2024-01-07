@@ -39,7 +39,6 @@ class LeiaTrainingArguments(TrainingArguments):
     trans_insertion_min_prob: float = field(default=0.0)
 
     max_length: int = field(default=1024)
-    min_lr_ratio: float = field(default=0.0)
 
     eval_tasks: str | None = field(default=None)
     max_eval_samples_for_tasks: int | None = field(default=None)

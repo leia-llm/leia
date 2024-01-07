@@ -5,7 +5,6 @@ from datasets import Dataset
 from transformers.trainer import Trainer
 
 from leia.tasks import get_task, LoglikelihoodTask, GenerationTask
-from leia.utils import get_cosine_schedule_with_warmup_and_min_lr_ratio
 
 
 class LeiaTrainer(Trainer):
@@ -44,21 +43,6 @@ class LeiaTrainer(Trainer):
         self._eval_generation_task_kwargs = {}
         if eval_generation_task_kwargs is not None:
             self._eval_generation_task_kwargs = eval_generation_task_kwargs
-
-    def create_scheduler(self, num_training_steps: int, optimizer: torch.optim.Optimizer | None = None):
-        if self.args.lr_scheduler_type == "cosine_with_min_lr":
-            if self.lr_scheduler is None:
-                self.lr_scheduler = get_cosine_schedule_with_warmup_and_min_lr_ratio(
-                    optimizer=self.optimizer if optimizer is None else optimizer,
-                    num_warmup_steps=self.args.get_warmup_steps(num_training_steps),
-                    num_training_steps=num_training_steps,
-                    min_lr_ratio=self.args.min_lr_ratio,
-                )
-                self._created_lr_scheduler = True
-
-            return self.lr_scheduler
-        else:
-            return super().create_scheduler(num_training_steps, optimizer)
 
     def evaluate(
         self,
