@@ -62,7 +62,7 @@ accelerate launch \
     --dynamo_backend "no" \
     \
     --use_deepspeed \
-    --zero_stage 3 \
+    --zero_stage ${ZERO_STAGE:="3"} \
     --zero3_init_flag false \
     --zero3_save_16bit_model true \
     --offload_optimizer_device ${OFFLOAD_OPTIMIZER_DEVICE:-"none"} \
@@ -106,7 +106,6 @@ accelerate launch \
     --trans_insertion_prob  ${TRANS_INSERTION_PROB:-"1.0"} \
     --trans_insertion_prob_decay ${TRANS_INSERTION_PROB_DECAY:-"true"} \
     --trans_insertion_min_prob ${TRANS_INSERTION_MIN_PROB:-"0.0"} \
-    --trans_token_loss_weight ${TRANS_TOKEN_LOSS_WEIGHT:-"1.0"} \
     \
     --max_eval_samples_for_tasks ${MAX_EVAL_SAMPLES_FOR_TASKS:-"2000"} \
     --use_dynamic_generation_length ${USE_DYNAMIC_GENERATION_LENGTH:-"true"} \
