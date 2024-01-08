@@ -31,9 +31,10 @@ def main(args: argparse.Namespace) -> None:
         trans_end_token_id=tokenizer.vocab["</trans>"],
         trans_insertion_prob=args.trans_insertion_prob,
         trans_insertion_prob_decay=False,
+        trans_insertion_min_prob=0.0,
         trans_insertion_strategy=args.trans_insertion_strategy,
     )
-    collator = LeiaDataCollator(tokenizer=tokenizer, max_length=args.max_length)
+    collator = LeiaDataCollator(tokenizer=tokenizer, max_length=args.max_length, return_token_mask=True)
     for example in dataset:
         os.system("clear")
         example = collator([example])
