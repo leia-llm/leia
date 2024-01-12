@@ -112,7 +112,7 @@ accelerate launch \
     --log_level "info" \
     --logging_steps "10" \
     \
-    --save_strategy ${SAVE_STRATEGY:-"none"} \
+    --save_strategy ${SAVE_STRATEGY:-"no"} \
     --save_steps ${SAVE_STEPS} \
     --save_total_limit ${SAVE_TOTAL_LIMIT:-"5"} \
     \
