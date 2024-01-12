@@ -3,7 +3,12 @@ from dataclasses import dataclass, field
 
 import datasets
 import transformers
-from datasets import concatenate_datasets, interleave_datasets, load_dataset, load_from_disk
+from datasets import (
+    concatenate_datasets,
+    interleave_datasets,
+    load_dataset,
+    load_from_disk,
+)
 from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
@@ -15,7 +20,6 @@ from transformers import (
 
 from leia.data import LeiaConstantLengthDataset, LeiaDataCollator
 from leia.trainer import LeiaTrainer
-from leia.xglm import replace_xglm_attention_to_flash_attention_2
 
 logger = logging.getLogger(__name__)
 
@@ -72,10 +76,6 @@ def main():
     tokenizer = AutoTokenizer.from_pretrained(args.model_name_or_path)
     if tokenizer.pad_token_id is None:
         tokenizer.pad_token_id = tokenizer.eos_token_id
-
-    if args.use_flash_attention_2 and "xglm" in args.model_name_or_path:
-        args.use_flash_attention_2 = False
-        replace_xglm_attention_to_flash_attention_2()
 
     model = AutoModelForCausalLM.from_pretrained(
         args.model_name_or_path,
