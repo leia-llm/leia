@@ -18,7 +18,7 @@ if [[ -z ${LANGUAGE} ]]; then
 fi
 
 NUM_PROCESSES=${NUM_PROCESSES:-`nvidia-smi --query-gpu=name --format=csv,noheader | wc -l`}
-BATCH_SIZE=${BATCH_SIZE:-"512"}
+BATCH_SIZE=${BATCH_SIZE:-"2048"}
 PER_DEVICE_TRAIN_BATCH_SIZE=${PER_DEVICE_TRAIN_BATCH_SIZE:-"1"}    
 GRADIENT_ACCUMULATION_STEPS=$((${BATCH_SIZE} / ${PER_DEVICE_TRAIN_BATCH_SIZE} / ${NUM_PROCESSES}))
 
@@ -27,7 +27,6 @@ if [[ -z ${MAX_STEPS} ]]; then
     MAX_TRAIN_TOKENS=${MAX_TRAIN_TOKENS:-"204800000"}
     MAX_STEPS=$((${MAX_TRAIN_TOKENS} / ${BATCH_SIZE} / ${MAX_LENGTH}))
 fi
-WARMUP_STEPS=${WARMUP_STEPS:-$((${MAX_STEPS} / 10))}
 EVAL_STEPS=${EVAL_STEPS:-$((${MAX_STEPS} / 5))}
 SAVE_STEPS=${SAVE_STEPS:-$((${MAX_STEPS} / 5))}
 
@@ -91,10 +90,10 @@ accelerate launch \
     --learning_rate ${LEARNING_RATE:-"2e-5"} \
     --lr_scheduler_type ${LR_SCHEDULER_TYPE:-"cosine"} \
     --max_steps ${MAX_STEPS} \
-    --warmup_steps ${WARMUP_STEPS} \
+    --warmup_steps ${WARMUP_STEPS:-0} \
     --weight_decay ${WEIGHT_DECAY:-"0.1"} \
     --adam_beta1 ${ADAM_BETA1:-"0.9"} \
-    --adam_beta2 ${ADAM_BETA2:-"0.999"} \
+    --adam_beta2 ${ADAM_BETA2:-"0.95"} \
     --adam_epsilon ${ADAM_EPSILON:-"1e-6"} \
     --eval_steps ${EVAL_STEPS} \
     --evaluation_strategy "steps" \
@@ -103,7 +102,7 @@ accelerate launch \
     \
     --trans_insertion_strategy ${TRANS_INSERTION_STRATEGY:-"none"} \
     --trans_insertion_prob  ${TRANS_INSERTION_PROB:-"1.0"} \
-    --trans_insertion_prob_decay ${TRANS_INSERTION_PROB_DECAY:-"true"} \
+    --trans_insertion_prob_decay ${TRANS_INSERTION_PROB_DECAY:-"false"} \
     --trans_insertion_min_prob ${TRANS_INSERTION_MIN_PROB:-"0.0"} \
     \
     --max_eval_samples_for_tasks ${MAX_EVAL_SAMPLES_FOR_TASKS:-"2000"} \
@@ -113,7 +112,7 @@ accelerate launch \
     --log_level "info" \
     --logging_steps "10" \
     \
-    --save_strategy ${SAVE_STRATEGY:-"steps"} \
+    --save_strategy ${SAVE_STRATEGY:-"none"} \
     --save_steps ${SAVE_STEPS} \
     --save_total_limit ${SAVE_TOTAL_LIMIT:-"5"} \
     \
