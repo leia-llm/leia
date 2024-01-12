@@ -90,7 +90,7 @@ accelerate launch \
     --learning_rate ${LEARNING_RATE:-"2e-5"} \
     --lr_scheduler_type ${LR_SCHEDULER_TYPE:-"cosine"} \
     --max_steps ${MAX_STEPS} \
-    --warmup_steps ${WARMUP_STEPS:-0} \
+    --warmup_steps ${WARMUP_STEPS:-"0"} \
     --weight_decay ${WEIGHT_DECAY:-"0.1"} \
     --adam_beta1 ${ADAM_BETA1:-"0.9"} \
     --adam_beta2 ${ADAM_BETA2:-"0.95"} \
