@@ -51,7 +51,7 @@ class PAWSXBase(LoglikelihoodTask, metaclass=ABCMeta):
 
     def _process_results(self, example: dict, results: list[float]) -> dict:
         ll_yes, ll_no = results
-        prediction = ll_yes > ll_no
+        prediction = int(ll_yes > ll_no)
         if prediction == example["label"]:
             accuracy = 1.0
         else:
