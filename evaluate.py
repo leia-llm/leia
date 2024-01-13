@@ -12,8 +12,6 @@ from leia.tasks import get_task
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_NUM_FEW_SHOT_SAMPLES = 3
-
 
 def evaluate(args: argparse.Namespace):
     model = AutoModelForCausalLM.from_pretrained(
@@ -35,12 +33,11 @@ def evaluate(args: argparse.Namespace):
 
     tasks = args.task.split(",")
     print("Tasks:", tasks)
-    num_fewshot_samples = [DEFAULT_NUM_FEW_SHOT_SAMPLES] * len(tasks)
-    if args.num_fewshot_samples is not None:
-        num_fewshot_samples = [int(x) for x in args.num_fewshot_samples.split(",")]
-        assert len(tasks) == len(
-            num_fewshot_samples
-        ), "The length of tasks and the length of num_fewshot_samples must be the same."
+
+    num_fewshot_samples = [int(x) for x in args.num_fewshot_samples.split(",")]
+    assert len(tasks) == len(
+        num_fewshot_samples
+    ), "The length of tasks and the length of num_fewshot_samples must be the same."
 
     if args.output_dir is not None:
         os.makedirs(args.output_dir, exist_ok=True)
@@ -60,12 +57,14 @@ def evaluate(args: argparse.Namespace):
         result = task.run()
         if accelerator.is_main_process:
             print(task_name, result.metrics)
+
             if args.output_dir is not None:
                 with open(os.path.join(args.output_dir, f"{task_name}_metrics.json"), "w") as f:
                     json.dump(result.metrics, f, indent=2)
                 with open(os.path.join(args.output_dir, f"{task_name}_predictions.jsonl"), "w") as f:
                     for example, prediction in zip(result.examples, result.predictions):
                         f.write(f'{json.dumps({"example": example, "prediction": prediction}, ensure_ascii=False)}\n')
+
             all_metrics[task_name] = result.metrics
 
         accelerator.wait_for_everyone()
@@ -80,7 +79,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--model_name_or_path", type=str, required=True)
     parser.add_argument("--task", type=str, required=True)
-    parser.add_argument("--num_fewshot_samples", type=str)
+    parser.add_argument("--num_fewshot_samples", type=str, required=True)
     parser.add_argument("--output_dir", type=str)
     parser.add_argument("--batch_size", type=int, default=1)
     parser.add_argument("--max_length", type=int, default=None)
