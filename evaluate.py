@@ -32,8 +32,6 @@ def evaluate(args: argparse.Namespace):
         tokenizer.eos_token = "<|endoftext|>"
 
     tasks = args.task.split(",")
-    print("Tasks:", tasks)
-
     num_fewshot_samples = [int(x) for x in args.num_fewshot_samples.split(",")]
     assert len(tasks) == len(
         num_fewshot_samples
