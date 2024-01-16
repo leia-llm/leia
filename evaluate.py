@@ -20,7 +20,9 @@ def evaluate(args: argparse.Namespace):
         torch_dtype=torch.float16,
         use_flash_attention_2=args.use_flash_attention_2,
     )
-    max_length = model.config.max_position_embeddings if args.max_length is None else args.max_length
+    max_length = getattr(model.config, "max_position_embeddings", None) if args.max_length is None else args.max_length
+    if max_length is None:
+        max_length = 2048
 
     accelerator = Accelerator()
     model = accelerator.prepare(model)
