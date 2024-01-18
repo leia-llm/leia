@@ -35,9 +35,6 @@ def evaluate(args: argparse.Namespace):
 
     tokenizer = AutoTokenizer.from_pretrained(args.model_name_or_path, trust_remote_code=True)
     tokenizer.pad_token_id = tokenizer.eos_token_id
-    if "qwen" in args.model_name_or_path.lower():
-        tokenizer.pad_token = "<|endoftext|>"
-        tokenizer.eos_token = "<|endoftext|>"
 
     tasks = args.task.split(",")
     num_fewshot_samples = [int(x) for x in args.num_fewshot_samples.split(",")]
