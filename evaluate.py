@@ -14,11 +14,17 @@ logger = logging.getLogger(__name__)
 
 
 def evaluate(args: argparse.Namespace):
+    kwargs = {}
+    if args.use_flash_attention_2:
+        kwargs["use_flash_attention_2"] = True
+    if args.device_map is not None:
+        kwargs["device_map"] = args.device_map
+
     model = AutoModelForCausalLM.from_pretrained(
         args.model_name_or_path,
         trust_remote_code=True,
         torch_dtype=torch.float16,
-        use_flash_attention_2=args.use_flash_attention_2,
+        **kwargs,
     )
     max_length = getattr(model.config, "max_position_embeddings", None) if args.max_length is None else args.max_length
     if max_length is None:
@@ -85,6 +91,7 @@ if __name__ == "__main__":
     parser.add_argument("--max_length", type=int, default=None)
     parser.add_argument("--max_samples", type=int, default=None)
     parser.add_argument("--use_flash_attention_2", action="store_true")
+    parser.add_argument("--device_map", type=str, default=None)
     args = parser.parse_args()
 
     metrics = evaluate(args)
