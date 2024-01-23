@@ -29,6 +29,7 @@ class LeiaTrainingArguments(TrainingArguments):
     trans_insertion_prob: float = field(default=1.0)
     trans_insertion_prob_decay: bool = field(default=False)
     trans_insertion_min_prob: float = field(default=0.0)
+    disable_trans_token_loss: bool = field(default=False)
 
     max_length: int = field(default=1024)
 
@@ -103,7 +104,9 @@ def main():
         seed=args.seed,
     )
 
-    data_collator = LeiaDataCollator(tokenizer=tokenizer, max_length=args.max_length)
+    data_collator = LeiaDataCollator(
+        tokenizer=tokenizer, max_length=args.max_length, disable_trans_token_loss=args.disable_trans_token_loss
+    )
 
     eval_tasks = []
     if args.eval_tasks is not None:

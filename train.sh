@@ -100,6 +100,7 @@ accelerate launch \
     --trans_insertion_prob  ${TRANS_INSERTION_PROB:-"1.0"} \
     --trans_insertion_prob_decay ${TRANS_INSERTION_PROB_DECAY:-"false"} \
     --trans_insertion_min_prob ${TRANS_INSERTION_MIN_PROB:-"0.0"} \
+    --disable_trans_token_loss ${DISABLE_TRANS_TOKEN_LOSS:-"false"} \
     \
     --max_eval_samples_for_tasks ${MAX_EVAL_SAMPLES_FOR_TASKS:-"2000"} \
     --use_dynamic_generation_length ${USE_DYNAMIC_GENERATION_LENGTH:-"true"} \
