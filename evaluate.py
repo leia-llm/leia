@@ -63,7 +63,9 @@ def evaluate(args: argparse.Namespace):
 
             if args.output_dir is not None:
                 with open(os.path.join(args.output_dir, f"{task_name}_metrics.json"), "w") as f:
-                    json.dump(result.metrics, f, indent=2)
+                    data = result.metrics.copy()
+                    data["num_fewshot_samples"] = num_samples
+                    json.dump(data, f, indent=2)
                 with open(os.path.join(args.output_dir, f"{task_name}_predictions.jsonl"), "w") as f:
                     for example, prediction in zip(result.examples, result.predictions):
                         f.write(f'{json.dumps({"example": example, "prediction": prediction}, ensure_ascii=False)}\n')
