@@ -54,6 +54,9 @@ fi
 if [[ ! -z ${RESUME_FROM_CHECKPOINT} ]]; then
     ARGS="${ARGS} --resume_from_checkpoint ${RESUME_FROM_CHECKPOINT}"
 fi
+if [[ -z ${SEED} ]]; then
+    SEED="42"
+fi
 
 accelerate launch \
     --num_machines 1 \
@@ -112,7 +115,7 @@ accelerate launch \
     --save_steps ${SAVE_STEPS} \
     --save_total_limit ${SAVE_TOTAL_LIMIT:-"5"} \
     \
-    --seed "42" \
+    --seed ${SEED} \
     --dataloader_num_workers "1" \
     --overwrite_output_dir "true" \
     --remove_unused_columns "false" \
