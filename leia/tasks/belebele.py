@@ -34,7 +34,7 @@ def _create_task_class(language: str) -> type[BelebeleBase]:
             return None
 
         def _get_task_dataset(self) -> Dataset:
-            return load_dataset("facebook/belebele", language, split="train")
+            return load_dataset("facebook/belebele", split=language)
 
     return _Belebele
 
