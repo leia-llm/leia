@@ -68,7 +68,16 @@ def evaluate(args: argparse.Namespace):
                     json.dump(data, f, indent=2)
                 with open(os.path.join(args.output_dir, f"{task_name}_predictions.jsonl"), "w") as f:
                     for example, prediction in zip(result.examples, result.predictions):
-                        f.write(f'{json.dumps({"example": example, "prediction": prediction}, ensure_ascii=False)}\n')
+                        new_example = {}
+                        for key, value in example.items():
+                            try:
+                                json.dumps(value)
+                            except TypeError:
+                                continue
+                            new_example[key] = value
+                        f.write(
+                            f'{json.dumps({"example": new_example, "prediction": prediction}, ensure_ascii=False)}\n'
+                        )
 
             all_metrics[task_name] = result.metrics
 
