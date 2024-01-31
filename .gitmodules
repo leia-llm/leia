@@ -1,0 +1,6 @@
+[submodule "llm-jp-eval"]
+	path = llm-jp-eval
+	url = https://github.com/llm-jp/llm-jp-eval.git
+[submodule "jp-lm-evaluation-harness"]
+	path = jp-lm-evaluation-harness
+	url = https://github.com/Stability-AI/lm-evaluation-harness.git
