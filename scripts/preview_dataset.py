@@ -56,7 +56,7 @@ if __name__ == "__main__":
     parser.add_argument("--max_length", type=int, default=2048)
     parser.add_argument("--trans_insertion_prob", type=float, default=1.0)
     parser.add_argument(
-        "--trans_insertion_strategy", type=str, choices=["random", "left", "right", "replace"], default="right"
+        "--trans_insertion_strategy", type=str, choices=["random", "left", "right", "replace", "none"], default="right"
     )
     parser.add_argument("--disable_trans_token_loss", action="store_true")
     args = parser.parse_args()
