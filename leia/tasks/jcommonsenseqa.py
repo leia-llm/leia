@@ -5,6 +5,9 @@ from .base import LogLikelihoodRequest, LoglikelihoodTask
 
 
 class JCommonsenseQA(LoglikelihoodTask):
+    def _get_description(self) -> str:
+        return "与えられた選択肢の中から、最適な答えを選んでください。 \n\n"
+
     def _get_train_dataset(self) -> Dataset:
         return load_dataset("shunk031/JGLUE", "JCommonsenseQA", split="train")
 
@@ -12,7 +15,8 @@ class JCommonsenseQA(LoglikelihoodTask):
         return load_dataset("shunk031/JGLUE", "JCommonsenseQA", split="validation")
 
     def _example_to_text(self, example: dict) -> str:
-        return f"Question: {example['question']}\nAnswer:"
+        choices = "\n".join([f"- {example[f'choice{index}']}" for index in range(5)])
+        return f"質問：{example['question']}\n選択肢：\n{choices}\n回答："
 
     def _example_to_target(self, example: dict) -> str:
         return example[f'choice{example["label"]}']
