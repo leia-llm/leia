@@ -30,13 +30,9 @@ def main(args: argparse.Namespace) -> None:
         trans_start_token_id=tokenizer.vocab["<trans>"],
         trans_end_token_id=tokenizer.vocab["</trans>"],
         trans_insertion_prob=args.trans_insertion_prob,
-        trans_insertion_prob_decay=False,
-        trans_insertion_min_prob=0.0,
         trans_insertion_strategy=args.trans_insertion_strategy,
     )
-    collator = LeiaDataCollator(
-        tokenizer=tokenizer, max_length=args.max_length, disable_trans_token_loss=args.disable_trans_token_loss
-    )
+    collator = LeiaDataCollator(tokenizer=tokenizer, max_length=args.max_length)
     for example in dataset:
         os.system("clear")
         example = collator([example])
@@ -44,8 +40,6 @@ def main(args: argparse.Namespace) -> None:
         text = text.replace("<trans>", f"{BLUE}<trans>{RESET}")
         text = text.replace("</trans>", f"{BLUE}</trans>{RESET}")
         print(text)
-        no_loss_input_ids = example["input_ids"].masked_select(example["labels"] == -100)
-        print("Tokens with disabled loss prop:", tokenizer.decode(no_loss_input_ids))
         input("Press Enter to continue...")
 
 
@@ -56,9 +50,8 @@ if __name__ == "__main__":
     parser.add_argument("--max_length", type=int, default=2048)
     parser.add_argument("--trans_insertion_prob", type=float, default=1.0)
     parser.add_argument(
-        "--trans_insertion_strategy", type=str, choices=["random", "left", "right", "replace", "none"], default="right"
+        "--trans_insertion_strategy", type=str, choices=["left", "right", "replace", "none"], default="right"
     )
-    parser.add_argument("--disable_trans_token_loss", action="store_true")
     args = parser.parse_args()
 
     main(args)
