@@ -6,7 +6,7 @@ By augmenting the Wikipedia-based training corpus with English entity names alon
 
 The following figure shows the LEIA' data augmentation applied to text from Chinese Wikipedia. English entity names enclosed in special `<translate>` and `</translate>` tokens are inserted adjacent to hyperlinks to facilitate cross-lingual transfer.
 
-<img src="resources/leia.png" alt="The data augmentation of LEIA">
+<img src="resources/leia.svg" alt="The data augmentation of LEIA">
 
 ## Installation
 
