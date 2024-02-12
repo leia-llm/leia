@@ -102,4 +102,4 @@ export NUM_FEWSHOT_SAMPLES="0,4"
 ./evaluate.sh
 ```
 
-For replicating the experimental results on Japanese datasets, refer to [llm-jp-eval](./llm-jp-eval/) and [JP Language Model Evaluation Harness](./jp-lm-evaluation-harness/).
+For replicating the experimental results on Japanese datasets, refer to [llm-jp-eval](https://github.com/llm-jp/llm-jp-eval/tree/v1.0.0) and [JP Language Model Evaluation Harness](https://github.com/Stability-AI/lm-evaluation-harness/tree/9b42d412d040084bb270ca87199b7da9a91a9d7d).
