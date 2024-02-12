@@ -87,7 +87,7 @@ export OUTPUT_DIR="runs/leia_${LANG}"
 ./train.sh
 ```
 
-### Evaluation
+## Evaluation
 
 To obtain experimental results, use the `evaluate.sh` script.
 
