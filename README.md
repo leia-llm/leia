@@ -1,7 +1,12 @@
 # LEIA
 
 This repository provides the source code for our study on LEIA (**L**ightweight **E**ntity-based **I**nter-language **A**daptation), a new language adaptation technique for large language models (LLMs) aimed at enhancing cross-lingual knowledge transfer.
+
 By augmenting the Wikipedia-based training corpus with English entity names alongside their corresponding hyperlinks in the target language text, LEIA enables LLMs to extract and apply its English knowledge about the entities within the target language text during training.
+
+The following figure shows the LEIA' data augmentation applied to text from Chinese Wikipedia. English entity names enclosed in special `<translate>` and `</translate>` tokens are inserted adjacent to hyperlinks to facilitate cross-lingual transfer.
+
+<img src="resources/leia.png" alt="The data augmentation of LEIA">
 
 ## Installation
 
