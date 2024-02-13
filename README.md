@@ -40,6 +40,7 @@ export WIKIPEDIA_DUMP_DATE="20230701"
 # Directory for storing the training dataset
 export WIKIPEDIA_DATASET_DIR="${WIKIPEDIA_DATA_DIR}/${LANG}_dataset"
 
+# Create directories for Wikidata and Wikipedia data
 mkdir -p ${WIKIDATA_DATA_DIR}
 mkdir -p ${WIKIPEDIA_DATA_DIR}
 
@@ -47,7 +48,7 @@ mkdir -p ${WIKIPEDIA_DATA_DIR}
 wget https://dumps.wikimedia.org/wikidatawiki/entities/${WIKIDATA_DUMP_DATE}/wikidata-${WIKIDATA_DUMP_DATE}-all.json.bz2 -P ${WIKIDATA_DATA_DIR}
 wget https://dumps.wikimedia.org/${LANG}wiki/${WIKIPEDIA_DUMP_DATE}/${LANG}wiki-${WIKIPEDIA_DUMP_DATE}-pages-articles-multistream.xml.bz2 -P ${WIKIPEDIA_DATA_DIR}
 
-# Use WikiExtractor to process Wikipedia dump
+# Process Wikipedia dump using WikiExtractor
 wikiextractor \
     ${WIKIPEDIA_DATA_DIR}/${LANG}wiki-${WIKIPEDIA_DUMP_DATE}-pages-articles-multistream.xml.bz2 \
     -o ${WIKIPEDIA_DATA_DIR}/${LANG} \
@@ -55,13 +56,12 @@ wikiextractor \
     --links \
     --no-templates
 
-# Extract Wikipedia redirect data from Wikipedia dump
+# Extract Wikipedia redirect information
 python scripts/extract_wikipedia_redirects.py \
     --dump_file ${WIKIPEDIA_DATA_DIR}/${LANG}wiki-${WIKIPEDIA_DUMP_DATE}-pages-articles-multistream.xml.bz2 \
     --output_file ${WIKIPEDIA_DATA_DIR}/${LANG}wiki-redirects.tsv
 
-
-# Extract Inter-language link data from Wikidata dump
+# Extract inter-language link data from Wikidata dump
 python scripts/extract_wikidata_ids.py \
     --dump_file ${WIKIDATA_DATA_DIR}/wikidata-${WIKIDATA_DUMP_DATE}-all.json.bz2 \
     --output_dir ${WIKIDATA_DATA_DIR} \
@@ -73,7 +73,6 @@ python scripts/preprocess_wikipedia.py \
     --redirect_file "${WIKIPEDIA_DATA_DIR}/${LANG}wiki-redirects.tsv" \
     --wikidata_id_file "${WIKIDATA_DATA_DIR}/${LANG}-wikidata-ids.tsv" \
     --output_dir "${WIKIPEDIA_DATA_DIR}/${LANG}_preprocessed"
-
 
 # Build Wikipedia dataset for training
 python scripts/build_wikipedia_dataset.py \
@@ -110,6 +109,7 @@ export TASK="xcodah_${LANG},xcsqa_${LANG}"
 # Number of fewshot samples for each task
 export NUM_FEWSHOT_SAMPLES="0,4"
 
+# Run evaluation
 ./evaluate.sh
 ```
 
