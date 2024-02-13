@@ -1,12 +1,12 @@
 # LEIA
 
-This repository provides the source code for our study on LEIA (**L**ightweight **E**ntity-based **I**nter-language **A**daptation), a new language adaptation technique for large language models (LLMs) aimed at enhancing cross-lingual knowledge transfer.
+This repository hosts the source code for our study on LEIA (**L**ightweight **E**ntity-based **I**nter-language **A**daptation), a new language adaptation technique for large language models (LLMs) aimed at enhancing cross-lingual knowledge transfer.
 
-By augmenting the Wikipedia-based training corpus with English entity names alongside their corresponding hyperlinks in the target language text, LEIA enables LLMs to extract and apply its English knowledge about the entities within the target language text during training.
+By augmenting the Wikipedia-based training corpus with English entity names placed alongside their corresponding entity hyperlinks in the Wikipedia text of a target language, LEIA enables an LLM to extract and apply its internal English knowledge about the entities within the target language text during training.
 
-The following figure shows the LEIA' data augmentation applied to text from Chinese Wikipedia. English entity names enclosed in special `<translate>` and `</translate>` tokens are inserted adjacent to hyperlinks to facilitate cross-lingual transfer.
+The following figure shows the proposed data augmentation applied to text from Chinese Wikipedia. English entity names enclosed in special `<translate>` and `</translate>` tokens are inserted adjacent to hyperlinks to facilitate cross-lingual transfer from English to Chinese.
 
-<img src="resources/leia.svg" alt="The data augmentation of LEIA">
+<img src="resources/leia.svg" alt="Data augmentation example of LEIA">
 
 ## Installation
 
@@ -23,15 +23,21 @@ The following commands build the Japanese Wikipedia corpus augmented with Englis
 The dataset will be saved in `$WIKIPEDIA_DATASET_DIR`.
 
 ```bash
+# Target language
 export LANG="ja"
+
+# Model to be fine-tuned
+export MODEL_NAME_OR_PATH="meta-llama/Llama-2-7b-hf"
+
 # Directories for storing Wikidata and Wikipedia data
 export WIKIDATA_DATA_DIR="data/wikidata"
 export WIKIPEDIA_DATA_DIR="data/wikipedia"
+
 # Dump dates for Wikidata and Wikipedia
 export WIKIDATA_DUMP_DATE="20230703"
 export WIKIPEDIA_DUMP_DATE="20230701"
 
-export MODEL_NAME_OR_PATH="meta-llama/Llama-2-7b-hf"
+# Directory for storing the training dataset
 export WIKIPEDIA_DATASET_DIR="${WIKIPEDIA_DATA_DIR}/${LANG}_dataset"
 
 mkdir -p ${WIKIDATA_DATA_DIR}
@@ -83,7 +89,7 @@ To fine-tune the model with the previously built dataset, run the `train.sh` scr
 This will save the trained model checkpoints in the specified output directory.
 
 ```bash
-# Name for this experiment
+# Name for this training run
 export RUN_NAME="leia_${LANG}"
 # Output directory for saving the model checkpoint files
 export OUTPUT_DIR="runs/leia_${LANG}"
@@ -94,7 +100,7 @@ export OUTPUT_DIR="runs/leia_${LANG}"
 
 ## Evaluation
 
-To obtain experimental results, use the `evaluate.sh` script.
+To obtain experimental results, run the `evaluate.sh` script.
 
 ```bash
 # Model path to be evaluated
