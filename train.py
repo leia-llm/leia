@@ -3,17 +3,17 @@ from dataclasses import dataclass, field
 
 import datasets
 import transformers
-from datasets import concatenate_datasets, load_from_disk
+from datasets import load_from_disk
 from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
     HfArgumentParser,
+    Trainer,
     TrainingArguments,
     set_seed,
 )
 
 from leia.data import LeiaConstantLengthDataset, LeiaDataCollator
-from leia.trainer import LeiaTrainer
 
 logger = logging.getLogger(__name__)
 
@@ -21,22 +21,15 @@ logger = logging.getLogger(__name__)
 @dataclass
 class LeiaTrainingArguments(TrainingArguments):
     model_name_or_path: str | None = field(default=None)
-    use_flash_attention_2: bool = field(default=False)
+    use_flash_attention_2: bool = field(default=True)
 
     wikipedia_dataset_dir: str | None = field(default=None)
 
-    trans_insertion_strategy: str = field(default="none")
-    trans_insertion_prob: float = field(default=1.0)
-    trans_insertion_prob_decay: bool = field(default=False)
-    trans_insertion_min_prob: float = field(default=0.0)
+    trans_insertion_strategy: str = field(default="right")
+    trans_insertion_prob: float = field(default=0.5)
     disable_trans_token_loss: bool = field(default=False)
 
-    max_length: int = field(default=1024)
-
-    eval_tasks: str | None = field(default=None)
-    max_eval_samples_for_tasks: int | None = field(default=None)
-    num_fewshot_samples_for_tasks: str | None = field(default=None)
-    use_dynamic_generation_length: bool = field(default=True)
+    max_length: int = field(default=2048)
 
 
 def main():
@@ -79,26 +72,19 @@ def main():
     embeddings_data[-num_new_tokens:] = embeddings_avg
 
     logger.info("Loading datasets...")
-    wikipedia_datasets = []
-    for wikipedia_dataset_dir in args.wikipedia_dataset_dir.split(","):
-        wikipedia_datasets.append(load_from_disk(wikipedia_dataset_dir))
-    wikipedia_dataset = concatenate_datasets(wikipedia_datasets)
-    wikipedia_dataset_size = len(wikipedia_dataset)
-    wikipedia_dataset = wikipedia_dataset.to_iterable_dataset(num_shards=1024)
+    wikipedia_dataset = load_from_disk(args.wikipedia_dataset_dir)
 
     max_num_examples = (
         args.max_steps * args.gradient_accumulation_steps * args.per_device_train_batch_size * args.world_size
     )
     train_cl_dataset = LeiaConstantLengthDataset(
         wikipedia_dataset,
-        dataset_size=wikipedia_dataset_size,
+        dataset_size=len(wikipedia_dataset),
         max_length=args.max_length,
         max_num_examples=max_num_examples,
         trans_start_token_id=tokenizer.vocab["<trans>"],
         trans_end_token_id=tokenizer.vocab["</trans>"],
         trans_insertion_prob=args.trans_insertion_prob,
-        trans_insertion_prob_decay=args.trans_insertion_prob_decay,
-        trans_insertion_min_prob=args.trans_insertion_min_prob,
         trans_insertion_strategy=args.trans_insertion_strategy,
         shuffle=True,
         seed=args.seed,
@@ -108,28 +94,12 @@ def main():
         tokenizer=tokenizer, max_length=args.max_length, disable_trans_token_loss=args.disable_trans_token_loss
     )
 
-    eval_tasks = []
-    if args.eval_tasks is not None:
-        eval_tasks = args.eval_tasks.split(",")
-    num_fewshot_samples_for_tasks = None
-    if args.num_fewshot_samples_for_tasks is not None:
-        num_fewshot_samples_for_tasks = [int(n) for n in args.num_fewshot_samples_for_tasks.split(",")]
-
-    trainer = LeiaTrainer(
+    trainer = Trainer(
         model=model,
         args=args,
         train_dataset=train_cl_dataset,
         tokenizer=tokenizer,
         data_collator=data_collator,
-        eval_tasks=eval_tasks,
-        num_fewshot_samples_for_tasks=num_fewshot_samples_for_tasks,
-        eval_task_kwargs={
-            "max_length": args.max_length,
-            "max_samples": args.max_eval_samples_for_tasks,
-        },
-        eval_generation_task_kwargs={
-            "use_dynamic_generation_length": args.use_dynamic_generation_length,
-        },
     )
     trainer.train()
 

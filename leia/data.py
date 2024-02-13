@@ -67,8 +67,6 @@ class LeiaConstantLengthDataset(IterableDataset):
         trans_start_token_id: int,
         trans_end_token_id: int,
         trans_insertion_prob: float,
-        trans_insertion_prob_decay: bool,
-        trans_insertion_min_prob: float,
         trans_insertion_strategy: str,
         shuffle: bool = False,
         seed: int = 42,
@@ -80,8 +78,6 @@ class LeiaConstantLengthDataset(IterableDataset):
         self._trans_start_token_id = trans_start_token_id
         self._trans_end_token_id = trans_end_token_id
         self._trans_insertion_prob = trans_insertion_prob
-        self._trans_insertion_prob_decay = trans_insertion_prob_decay
-        self._trans_insertion_min_prob = trans_insertion_min_prob
         self._trans_insertion_strategy = trans_insertion_strategy
         self._shuffle = shuffle
         self._seed = seed
@@ -114,10 +110,6 @@ class LeiaConstantLengthDataset(IterableDataset):
 
                     dataset_example_counter += 1
 
-                    if self._trans_insertion_prob_decay:
-                        trans_insertion_prob = self._trans_insertion_min_prob + (
-                            self._trans_insertion_prob - self._trans_insertion_min_prob
-                        ) * max(1.0 - output_example_counter / self._max_num_examples, 0.0)
                     input_ids += self._build_input_ids_from_example(example, trans_insertion_prob)
 
                     if dataset_example_counter != 1 and dataset_example_counter % 10000 == 0:
@@ -148,17 +140,15 @@ class LeiaConstantLengthDataset(IterableDataset):
                     continue
                 entity_input_ids = [self._trans_start_token_id] + entity_input_ids + [self._trans_end_token_id]
 
-                strategy = self._trans_insertion_strategy
-                if self._trans_insertion_strategy == "random":
-                    strategy = random.choice(["left", "right"])
-
-                if strategy == "left":
+                if self._trans_insertion_strategy == "left":
                     input_ids = input_ids[:start_position] + entity_input_ids + input_ids[start_position:]
-                elif strategy == "right":
+                elif self._trans_insertion_strategy == "right":
                     input_ids = input_ids[:end_position] + entity_input_ids + input_ids[end_position:]
-                elif strategy == "replace":
+                elif self._trans_insertion_strategy == "replace":
                     input_ids = input_ids[:start_position] + entity_input_ids + input_ids[end_position:]
                 else:
-                    assert strategy == "none", f"Invalid strategy: {self._trans_insertion_strategy}"
+                    assert (
+                        self._trans_insertion_strategy == "none"
+                    ), f"Invalid strategy: {self._trans_insertion_strategy}"
 
         return input_ids
