@@ -1,0 +1,7 @@
+beautifulsoup4==4.12.2
+datasets==2.16.1
+sentencepiece==0.1.99
+torch==2.1.0
+transformers==4.35.2
+tqdm==4.65.0
+wikiextractor @ git+https://github.com/attardi/wikiextractor@v3.0.7

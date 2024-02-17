@@ -1,0 +1,14 @@
+[build-system]
+build-backend = "setuptools.build_meta"
+requires = ["setuptools", "setuptools_scm"]
+
+[tool.setuptools]
+packages = ["leia"]
+
+[project]
+description = ""
+name = "leia"
+version = "0.0.1"
+
+[tool.black]
+line-length = 120
