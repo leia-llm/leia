@@ -13,6 +13,10 @@ if [[ -z ${NUM_FEWSHOT_SAMPLES} ]]; then
     exit 1
 fi
 
+if [[ ! -z ${OUTPUT_DIR} ]]; then
+    ARGS="${ARGS} --output_dir ${OUTPUT_DIR}"
+fi
+
 accelerate launch \
     --num_machines 1 \
     --num_processes 1 \
@@ -21,4 +25,5 @@ accelerate launch \
     --model_name_or_path ${MODEL_NAME_OR_PATH} \
     --tasks ${TASKS} \
     --num_fewshot_samples ${NUM_FEWSHOT_SAMPLES} \
-    --use_flash_attention_2
+    --use_flash_attention_2 \
+    ${ARGS}
