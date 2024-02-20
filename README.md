@@ -2,15 +2,9 @@
   <img src="resources/logo.png" style="width: 60%" alt="LEIA">
 </div>
 
-<h3 align="center">
-Facilitating Cross-Lingual Knowledge Transfer in Language Models with Entity-based Data Augmentation
-</h3>
+This repository hosts the source code for our paper, [**LEIA: Facilitating Cross-Lingual Knowledge Transfer in Language Models with Entity-based Data Augmentation**](https://arxiv.org/abs/2402.11485). This paper proposes a new language adaptation technique for large language models (LLMs) aimed at enhancing _cross-lingual knowledge transfer_ from English to other languages.
 
-This repository hosts the source code for our study on **LEIA** (**L**ightweight **E**ntity-based **I**nter-language **A**daptation), a language adaptation technique for large language models (LLMs) designed to enhance _cross-lingual knowledge transfer_ from English to other languages.
-
-By augmenting the Wikipedia-based training corpus in the target language with English entity names placed alongside their corresponding entity hyperlinks, LEIA enables an LLM to extract and apply its internal English knowledge about the entities within the target language text during training.
-
-The following figure illustrates the proposed data augmentation of LEIA applied to text from Chinese Wikipedia. English entity names enclosed within special `<translate>` and `</translate>` tokens are placed next to hyperlinks to facilitate cross-lingual transfer from English to Chinese.
+By augmenting the Wikipedia-based training corpus in the target language with English entity names placed alongside their corresponding entity hyperlinks, LEIA enables an LLM to extract and apply its internal English knowledge about the entities within the target language text during training. The following figure illustrates the proposed data augmentation of LEIA applied to text from Chinese Wikipedia. English entity names enclosed within special `<translate>` and `</translate>` tokens are placed next to hyperlinks to facilitate cross-lingual transfer from English to Chinese.
 
 <div align="center">
   <img src="resources/overview.svg" alt="Data augmentation example of LEIA">
@@ -130,3 +124,15 @@ export NUM_FEWSHOT_SAMPLES="0,4"
 ```
 
 For replicating the experimental results on Japanese datasets, refer to [llm-jp-eval](https://github.com/llm-jp/llm-jp-eval/tree/v1.0.0) and [JP Language Model Evaluation Harness](https://github.com/Stability-AI/lm-evaluation-harness/tree/9b42d412d040084bb270ca87199b7da9a91a9d7d).
+
+## Citation
+
+```bibtex
+@article{Yamada2024LEIA,
+  title={LEIA: Facilitating Cross-Lingual Knowledge Transfer in Language Models with Entity-based Data Augmentation},
+  author={Ikuya Yamada and Ryokan Ri},
+  journal={ArXiv},
+  year={2024},
+  volume={abs/2402.11485}
+}
+```
