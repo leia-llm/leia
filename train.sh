@@ -29,7 +29,7 @@ accelerate launch \
     --zero_stage 3 \
     --zero3_init_flag false \
     --zero3_save_16bit_model true \
-    --offload_optimizer_device none \
+    --offload_optimizer_device ${OFFLOAD_OPTIMIZER_DEVICE:-"none"} \
     \
     --gradient_accumulation_steps 256 \
     --gradient_clipping 1.0 \
