@@ -8,12 +8,12 @@ from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
     HfArgumentParser,
-    Trainer,
     TrainingArguments,
     set_seed,
 )
 
 from leia.data import LeiaConstantLengthDataset, LeiaDataCollator
+from leia.trainer import LeiaTrainer
 
 logger = logging.getLogger(__name__)
 
@@ -30,6 +30,8 @@ class LeiaTrainingArguments(TrainingArguments):
     disable_entity_name_token_loss: bool = field(default=False)
 
     max_length: int = field(default=2048)
+    tasks: str | None = field(default=None)
+    num_fewshot_samples: str | None = field(default=None)
 
 
 def main():
@@ -96,12 +98,24 @@ def main():
         disable_entity_name_token_loss=args.disable_entity_name_token_loss,
     )
 
-    trainer = Trainer(
+    tasks = []
+    if args.tasks is not None:
+        tasks = args.tasks.split(",")
+    num_fewshot_samples = None
+    if args.num_fewshot_samples is not None:
+        num_fewshot_samples = [int(n) for n in args.num_fewshot_samples.split(",")]
+
+    trainer = LeiaTrainer(
         model=model,
         args=args,
         train_dataset=train_cl_dataset,
         tokenizer=tokenizer,
         data_collator=data_collator,
+        tasks=tasks,
+        num_fewshot_samples=num_fewshot_samples,
+        task_kwargs={
+            "max_length": args.max_length,
+        },
     )
     trainer.train()
 

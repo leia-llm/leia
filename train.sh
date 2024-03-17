@@ -13,6 +13,13 @@ if [[ -z ${WIKIPEDIA_DATASET_DIR} ]]; then
     exit 1
 fi
 
+if [[ ! -z ${TASKS} ]]; then
+    ARGS="${ARGS} --tasks ${TASKS}"
+fi
+if [[ ! -z ${NUM_FEWSHOT_SAMPLES} ]]; then
+    ARGS="${ARGS} --num_fewshot_samples ${NUM_FEWSHOT_SAMPLES}"
+fi
+
 accelerate launch \
     --num_machines 1 \
     --num_processes 8 \
@@ -22,7 +29,7 @@ accelerate launch \
     --zero_stage 3 \
     --zero3_init_flag false \
     --zero3_save_16bit_model true \
-    --offload_optimizer_device none \
+    --offload_optimizer_device ${OFFLOAD_OPTIMIZER_DEVICE:-"none"} \
     \
     --gradient_accumulation_steps 256 \
     --gradient_clipping 1.0 \
@@ -41,7 +48,7 @@ accelerate launch \
     --per_device_eval_batch_size "1" \
     --gradient_accumulation_steps "256" \
     --gradient_checkpointing "true" \
-    --learning_rate "5e-6" \
+    --learning_rate ${LEARNING_RATE:-"5e-6"} \
     --lr_scheduler_type cosine \
     --max_steps "50" \
     --warmup_steps "0" \
@@ -52,8 +59,10 @@ accelerate launch \
     --max_length "2048" \
     --log_level "info" \
     --logging_steps "10" \
-    --seed "42" \
+    --seed ${SEED:-"42"} \
     --dataloader_num_workers "1" \
     --remove_unused_columns "false" \
     --bf16 true \
-    --use_flash_attention_2
+    --use_flash_attention_2 \
+    \
+    $ARGS
