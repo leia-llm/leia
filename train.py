@@ -28,6 +28,7 @@ class LeiaTrainingArguments(TrainingArguments):
     entity_name_insertion_strategy: str = field(default="right")
     entity_name_insertion_prob: float = field(default=0.5)
     disable_entity_name_token_loss: bool = field(default=False)
+    no_separator_tokens: bool = field(default=False)
 
     max_length: int = field(default=2048)
 
@@ -86,6 +87,7 @@ def main():
         entity_name_end_token_id=tokenizer.vocab["</translate>"],
         entity_name_insertion_prob=args.entity_name_insertion_prob,
         entity_name_insertion_strategy=args.entity_name_insertion_strategy,
+        no_separator_tokens=args.no_separator_tokens,
         shuffle=True,
         seed=args.seed,
     )
