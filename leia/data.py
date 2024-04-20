@@ -68,6 +68,7 @@ class LeiaConstantLengthDataset(IterableDataset):
         entity_name_end_token_id: int,
         entity_name_insertion_prob: float,
         entity_name_insertion_strategy: str,
+        no_separator_tokens: bool = False,
         shuffle: bool = False,
         seed: int = 42,
     ):
@@ -79,6 +80,7 @@ class LeiaConstantLengthDataset(IterableDataset):
         self._entity_name_end_token_id = entity_name_end_token_id
         self._entity_name_insertion_prob = entity_name_insertion_prob
         self._entity_name_insertion_strategy = entity_name_insertion_strategy
+        self._no_separator_tokens = no_separator_tokens
         self._shuffle = shuffle
         self._seed = seed
         self._rnd = random.Random(seed)
@@ -138,9 +140,10 @@ class LeiaConstantLengthDataset(IterableDataset):
             ):
                 if self._rnd.random() > entity_name_insertion_prob:
                     continue
-                entity_input_ids = (
-                    [self._entity_name_start_token_id] + entity_input_ids + [self._entity_name_end_token_id]
-                )
+                if not self._no_separator_tokens:
+                    entity_input_ids = (
+                        [self._entity_name_start_token_id] + entity_input_ids + [self._entity_name_end_token_id]
+                    )
 
                 if self._entity_name_insertion_strategy == "left":
                     input_ids = input_ids[:start_position] + entity_input_ids + input_ids[start_position:]

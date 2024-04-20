@@ -43,6 +43,7 @@ accelerate launch \
     --wikipedia_dataset_dir ${WIKIPEDIA_DATASET_DIR} \
     --entity_name_insertion_strategy ${ENTITY_NAME_INSERTION_STRATEGY:-"right"} \
     --entity_name_insertion_prob  ${ENTITY_NAME_INSERTION_PROB:-"0.5"} \
+    --no_separator_tokens ${NO_SEPARATOR_TOKENS:-"false"} \
     \
     --per_device_train_batch_size "1" \
     --per_device_eval_batch_size "1" \
